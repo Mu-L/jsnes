@@ -5,8 +5,8 @@ var FRAMEBUFFER_SIZE = SCREEN_WIDTH*SCREEN_HEIGHT;
 var canvas_ctx, image;
 var framebuffer_u8, framebuffer_u32;
 
-var AUDIO_BUFFERING = 512;
-var SAMPLE_COUNT = 4*1024;
+var AUDIO_BUFFERING = 1024;
+var SAMPLE_COUNT = 4*AUDIO_BUFFERING;
 var SAMPLE_MASK = SAMPLE_COUNT - 1;
 var audio_samples_L = new Float32Array(SAMPLE_COUNT);
 var audio_samples_R = new Float32Array(SAMPLE_COUNT);
@@ -25,7 +25,8 @@ var nes = new jsnes.NES({
 
 function onAnimationFrame(){
 	window.requestAnimationFrame(onAnimationFrame);
-	
+	nes.frame();
+
 	image.data.set(framebuffer_u8);
 	canvas_ctx.putImageData(image, 0, 0);
 }
@@ -39,7 +40,7 @@ function audio_callback(event){
 	var len = dst.length;
 	
 	// Attempt to avoid buffer underruns.
-	if(audio_remain() < AUDIO_BUFFERING) nes.frame();
+	if(audio_remain() < len) nes.frame();
 	
 	var dst_l = dst.getChannelData(0);
 	var dst_r = dst.getChannelData(1);
@@ -53,6 +54,7 @@ function audio_callback(event){
 }
 
 function keyboard(callback, event){
+    event.preventDefault();
 	var player = 1;
 	switch(event.keyCode){
 		case 38: // UP
@@ -77,6 +79,7 @@ function keyboard(callback, event){
 	}
 }
 
+var audio_ctx;
 function nes_init(canvas_id){
 	var canvas = document.getElementById(canvas_id);
 	canvas_ctx = canvas.getContext("2d");
@@ -91,10 +94,14 @@ function nes_init(canvas_id){
 	framebuffer_u32 = new Uint32Array(buffer);
 	
 	// Setup audio.
-	var audio_ctx = new window.AudioContext();
+	audio_ctx = new window.AudioContext();
 	var script_processor = audio_ctx.createScriptProcessor(AUDIO_BUFFERING, 0, 2);
 	script_processor.onaudioprocess = audio_callback;
 	script_processor.connect(audio_ctx.destination);
+	if (audio_ctx.state === 'suspended') {
+		var audioButton = document.getElementById('audio');
+		audioButton.style.display = 'block';
+	}
 }
 
 function nes_boot(rom_data){
@@ -130,3 +137,11 @@ function nes_load_url(canvas_id, path){
 
 document.addEventListener('keydown', (event) => {keyboard(nes.buttonDown, event)});
 document.addEventListener('keyup', (event) => {keyboard(nes.buttonUp, event)});
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    var audioButton = document.getElementById('audio');
+    audioButton.addEventListener('click', () => {
+        audio_ctx.resume();
+        audioButton.style.display = 'none';
+    });
+});
