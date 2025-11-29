@@ -5,12 +5,13 @@ var FRAMEBUFFER_SIZE = SCREEN_WIDTH*SCREEN_HEIGHT;
 var canvas_ctx, image;
 var framebuffer_u8, framebuffer_u32;
 
-var AUDIO_BUFFERING = 1024;
-var SAMPLE_COUNT = 4*AUDIO_BUFFERING;
+var AUDIO_BUFFERING = 512;
+var SAMPLE_COUNT = 4*1024;
 var SAMPLE_MASK = SAMPLE_COUNT - 1;
 var audio_samples_L = new Float32Array(SAMPLE_COUNT);
 var audio_samples_R = new Float32Array(SAMPLE_COUNT);
 var audio_write_cursor = 0, audio_read_cursor = 0;
+var audio_started = false;
 
 var nes = new jsnes.NES({
 	onFrame: function(framebuffer_24){
@@ -25,7 +26,9 @@ var nes = new jsnes.NES({
 
 function onAnimationFrame(){
 	window.requestAnimationFrame(onAnimationFrame);
-	nes.frame();
+	if (!audio_started) {
+		nes.frame();
+	}	
 
 	image.data.set(framebuffer_u8);
 	canvas_ctx.putImageData(image, 0, 0);
@@ -40,7 +43,7 @@ function audio_callback(event){
 	var len = dst.length;
 	
 	// Attempt to avoid buffer underruns.
-	if(audio_remain() < len) nes.frame();
+	if(audio_remain() < AUDIO_BUFFERING) nes.frame();
 	
 	var dst_l = dst.getChannelData(0);
 	var dst_r = dst.getChannelData(1);
@@ -141,7 +144,9 @@ document.addEventListener('keyup', (event) => {keyboard(nes.buttonUp, event)});
 document.addEventListener('DOMContentLoaded', (event) => {
     var audioButton = document.getElementById('audio');
     audioButton.addEventListener('click', () => {
-        audio_ctx.resume();
+        audio_ctx.resume().then(() => {
+			audio_started = true;
+		});
         audioButton.style.display = 'none';
     });
 });
