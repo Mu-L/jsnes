@@ -104,6 +104,8 @@ function nes_init(canvas_id){
 	if (audio_ctx.state === 'suspended') {
 		var audioButton = document.getElementById('audio');
 		audioButton.style.display = 'block';
+	} else {
+		audio_started = true;
 	}
 }
 
