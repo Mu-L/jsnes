@@ -61,6 +61,8 @@ Test ROMs:
 
 AccuracyCoin test results are encoded as `(subTestNumber << 2) | 2` for failures. The test harness in `test/accuracycoin.spec.js` runs all tests and reports individual pass/fail status. Known failures are listed in the `KNOWN_FAILURES` object.
 
+Remember that AccuracyCoin and nestest are DEFINITELY correct. They pass on a real NES. Don't blame the ROM for being wrong.
+
 ## Build Process
 
 Webpack configuration creates UMD modules compatible with browsers and Node.js:
@@ -76,9 +78,13 @@ Webpack configuration creates UMD modules compatible with browsers and Node.js:
 - Tests must pass before commits
 - Frame buffer regression tests prevent rendering regressions
 
+## Documentation and reference for the NES
+
+The nesdev wiki has tons of information about the NES. Browse this if you need to understand how things work, implementing a mapper, etc: https://www.nesdev.org/wiki/NES_reference_guide
+
 ## NES Hardware Accuracy
 
-The emulator implements several hardware-accurate behaviors verified by the AccuracyCoin test ROM. Key reference: https://www.nesdev.org/wiki/Open_bus_behavior
+The emulator implements several hardware-accurate behaviors verified by the AccuracyCoin test ROM. 
 
 ### Open Bus
 
@@ -88,6 +94,8 @@ The NES data bus retains the last value from any read/write. Reading from unmapp
 - **PPU open bus**: The PPU has its own internal I/O latch (`ppu.openBusLatch`), updated on every PPU register write. Write-only PPU registers ($2000, $2001, $2003, $2005, $2006) return this latch. $2002 returns status in bits 7-5 with the latch in bits 4-0.
 - **Controller open bus**: $4016/$4017 only drive bits 0-4; bits 5-7 come from the CPU data bus
 - **$4015 bit 5**: Not driven by APU; comes from the CPU data bus
+
+Key reference: https://www.nesdev.org/wiki/Open_bus_behavior
 
 ### Dummy Reads
 
