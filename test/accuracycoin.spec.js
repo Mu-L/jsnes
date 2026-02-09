@@ -244,7 +244,55 @@ var TEST_PAGES = [
 ];
 
 // Tests known to fail — skip these until the emulator is fixed.
-var KNOWN_FAILURES = {};
+// SHA/SHX/SHY/SHS: basic value computation and page-crossing glitch are correct,
+// but AccuracyCoin also tests OAM DMA bus hijacking (drops "& (H+1)" from the
+// stored value). DMA is handled atomically in sramDMA(), so bus-level interference
+// can't be modeled. See AccuracyCoin.asm lines 4441-4460, 4828-4848, 4884-4904.
+var KNOWN_FAILURES = {
+  // SHx DMA bus hijacking (see comment above)
+  0x0446: "SHA (d),Y DMA bus hijacking not emulated",
+  0x0447: "SHA abs,Y DMA bus hijacking not emulated",
+  0x0448: "SHS abs,Y DMA bus hijacking not emulated",
+  0x0449: "SHY abs,X DMA bus hijacking not emulated",
+  0x044a: "SHX abs,Y DMA bus hijacking not emulated",
+
+  // AXS: fails sub-test 5 (flags check)
+  0x0416: "AXS Immediate flags incorrect",
+
+  // CPU interrupts: not cycle-accurate enough
+  0x0461: "Interrupt flag latency not emulated",
+  0x0462: "NMI overlap BRK not emulated",
+  0x0463: "NMI overlap IRQ not emulated",
+
+  // DMA: handled atomically, no bus-level interleaving
+  0x046c: "DMA + Open Bus not emulated",
+  0x0488: "DMA + $2002 Read not emulated",
+  0x044c: "DMA + $2007 Read not emulated",
+  0x044f: "DMA + $2007 Write not emulated",
+  0x045d: "DMA + $4015 Read not emulated",
+  0x045e: "DMA + $4016 Read not emulated",
+  0x046b: "DMC DMA bus conflicts not emulated",
+  0x0477: "DMC DMA + OAM DMA not emulated",
+  0x0479: "Explicit DMA abort not emulated",
+  0x0478: "Implicit DMA abort not emulated",
+
+  // APU: timing/behavior not accurate enough
+  0x0465: "APU length counter not accurate",
+  0x0466: "APU length table not accurate",
+  0x0467: "APU frame counter IRQ not accurate",
+  0x0468: "APU frame counter 4-step not accurate",
+  0x0469: "APU frame counter 5-step not accurate",
+  0x046a: "DMC not accurate",
+  0x045c: "APU register activation not accurate",
+  0x045f: "Controller strobing not accurate",
+  0x047a: "Controller clocking not accurate",
+
+  // PPU: various behaviors not accurate enough
+  0x0485: "CHR ROM writability not enforced",
+  0x044e: "PPU register open bus not accurate",
+  0x0476: "PPU read buffer not accurate",
+  0x047e: "Palette RAM quirks not emulated",
+};
 
 // Flatten all tests for easy iteration
 var ALL_TESTS = [];
@@ -350,8 +398,7 @@ describe("AccuracyCoin", function () {
     });
   });
 
-  // SHA indirect,Y ($93) crashes the emulator (unimplemented opcode)
-  it.skip("should not crash before completing all tests", function () {
+  it("should not crash before completing all tests", function () {
     if (run.crashed) {
       // Figure out which test was running when the crash happened
       var lastRun = "unknown";

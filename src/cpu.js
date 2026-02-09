@@ -127,6 +127,10 @@ CPU.prototype = {
   emulate: function () {
     var temp;
     var add;
+    // High byte of the base address before index addition, used by
+    // SHA/SHX/SHY/SHS to compute the stored value as REG & (H+1).
+    // Set in addressing mode cases 8 (ABSX), 9 (ABSY), 11 (POSTIDXIND).
+    var baseHigh = 0;
 
     // Check interrupts:
     if (this.irqRequested) {
@@ -256,6 +260,7 @@ CPU.prototype = {
       case 8: {
         // Absolute Indexed Mode, X as index.
         addr = this.load16bit(opaddr + 2);
+        baseHigh = (addr >> 8) & 0xff;
         if ((addr & 0xff00) !== ((addr + this.REG_X) & 0xff00)) {
           // Page boundary crossed: the 6502 first reads from the "wrong"
           // address (correct low byte, uncorrected high byte) before reading
@@ -272,6 +277,7 @@ CPU.prototype = {
         // Absolute Indexed Mode, Y as index.
         // Same page-crossing dummy read behavior as case 8.
         addr = this.load16bit(opaddr + 2);
+        baseHigh = (addr >> 8) & 0xff;
         if ((addr & 0xff00) !== ((addr + this.REG_Y) & 0xff00)) {
           this.load((addr & 0xff00) | ((addr + this.REG_Y) & 0xff));
           cycleAdd = 1;
@@ -294,6 +300,7 @@ CPU.prototype = {
         // zero page, then add Y. Page-crossing dummy read as in case 8.
         var zpAddr = this.load(opaddr + 2);
         addr = this.load(zpAddr) | (this.load((zpAddr + 1) & 0xff) << 8);
+        baseHigh = (addr >> 8) & 0xff;
         if ((addr & 0xff00) !== ((addr + this.REG_Y) & 0xff00)) {
           this.load((addr & 0xff00) | ((addr + this.REG_Y) & 0xff));
           cycleAdd = 1;
@@ -1392,6 +1399,111 @@ CPU.prototype = {
         cycleCount += cycleAdd;
         break;
       }
+      case 71: {
+        // *******
+        // * SHA * (AHX/AXA)
+        // *******
+
+        // Store A AND X AND (high byte of base address + 1).
+        // On page crossing, the high byte of the effective address is
+        // replaced with the stored value — a quirk of the 6502's internal
+        // bus arbitration during indexed addressing.
+        // See https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
+        var shaVal = this.REG_ACC & this.REG_X & (((baseHigh + 1) & 0xff) | 0);
+        if (cycleAdd === 1) {
+          addr = (shaVal << 8) | (addr & 0xff);
+        }
+        this.write(addr, shaVal);
+        break;
+      }
+      case 72: {
+        // *******
+        // * SHS * (TAS/XAS)
+        // *******
+
+        // Transfer A AND X to SP, then store SP AND (high byte + 1).
+        // Same page-crossing address glitch as SHA.
+        // See https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
+        this.REG_SP = 0x0100 | (this.REG_ACC & this.REG_X);
+        var shsVal = this.REG_SP & 0xff & ((baseHigh + 1) & 0xff);
+        if (cycleAdd === 1) {
+          addr = (shsVal << 8) | (addr & 0xff);
+        }
+        this.write(addr, shsVal);
+        break;
+      }
+      case 73: {
+        // *******
+        // * SHY * (SYA/SAY)
+        // *******
+
+        // Store Y AND (high byte of base address + 1).
+        // Same page-crossing address glitch as SHA.
+        // See https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
+        var shyVal = this.REG_Y & ((baseHigh + 1) & 0xff);
+        if (cycleAdd === 1) {
+          addr = (shyVal << 8) | (addr & 0xff);
+        }
+        this.write(addr, shyVal);
+        break;
+      }
+      case 74: {
+        // *******
+        // * SHX * (SXA/XAS)
+        // *******
+
+        // Store X AND (high byte of base address + 1).
+        // Same page-crossing address glitch as SHA.
+        // See https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
+        var shxVal = this.REG_X & ((baseHigh + 1) & 0xff);
+        if (cycleAdd === 1) {
+          addr = (shxVal << 8) | (addr & 0xff);
+        }
+        this.write(addr, shxVal);
+        break;
+      }
+      case 75: {
+        // *******
+        // * LAE * (LAS/LAR)
+        // *******
+
+        // Load A, X, and SP with (memory AND SP).
+        // See https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
+        temp = this.load(addr) & (this.REG_SP & 0xff);
+        this.REG_ACC = this.REG_X = this.F_ZERO = temp;
+        this.REG_SP = 0x0100 | temp;
+        this.F_SIGN = (temp >> 7) & 1;
+        cycleCount += cycleAdd;
+        break;
+      }
+      case 76: {
+        // *******
+        // * ANE * (XAA)
+        // *******
+
+        // A = (A | MAGIC) & X & Immediate. The "magic" constant varies between
+        // CPU revisions ($00, $EE, $FF, etc). Using $FF — the most common value
+        // and the only one that passes AccuracyCoin's magic-independent tests.
+        // See https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
+        this.REG_ACC = this.F_ZERO =
+          (this.REG_ACC | 0xff) & this.REG_X & this.load(addr);
+        this.F_SIGN = (this.REG_ACC >> 7) & 1;
+        break;
+      }
+      case 77: {
+        // *******
+        // * LXA * (LAX immediate/ATX)
+        // *******
+
+        // A = (A | MAGIC) & Immediate, X = A. Same magic constant issue as ANE.
+        // See https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
+        this.REG_ACC =
+          this.REG_X =
+          this.F_ZERO =
+            (this.REG_ACC | 0xff) & this.load(addr);
+        this.F_SIGN = (this.REG_ACC >> 7) & 1;
+        break;
+      }
 
       default: {
         // *******
@@ -2029,6 +2141,28 @@ var OpData = function () {
   this.setOp(this.INS_IGN, 0xd4, this.ADDR_ZPX, 2, 4);
   this.setOp(this.INS_IGN, 0xf4, this.ADDR_ZPX, 2, 4);
 
+  // SHA (AHX): Store A AND X AND (H+1)
+  this.setOp(this.INS_SHA, 0x93, this.ADDR_POSTIDXIND, 2, 6);
+  this.setOp(this.INS_SHA, 0x9f, this.ADDR_ABSY, 3, 5);
+
+  // SHS (TAS): SP = A AND X, store SP AND (H+1)
+  this.setOp(this.INS_SHS, 0x9b, this.ADDR_ABSY, 3, 5);
+
+  // SHY (SYA): Store Y AND (H+1)
+  this.setOp(this.INS_SHY, 0x9c, this.ADDR_ABSX, 3, 5);
+
+  // SHX (SXA): Store X AND (H+1)
+  this.setOp(this.INS_SHX, 0x9e, this.ADDR_ABSY, 3, 5);
+
+  // LAE (LAS): A = X = SP = M AND SP
+  this.setOp(this.INS_LAE, 0xbb, this.ADDR_ABSY, 3, 4);
+
+  // ANE (XAA): A = (A | MAGIC) & X & Immediate
+  this.setOp(this.INS_ANE, 0x8b, this.ADDR_IMM, 2, 2);
+
+  // LXA (LAX immediate): A = X = (A | MAGIC) & Immediate
+  this.setOp(this.INS_LXA, 0xab, this.ADDR_IMM, 2, 2);
+
   // prettier-ignore
   this.cycTable = new Array(
     /*0x00*/ 7,6,2,8,3,3,5,5,3,2,2,2,4,4,6,6,
@@ -2049,7 +2183,7 @@ var OpData = function () {
     /*0xF0*/ 2,5,2,8,4,4,6,6,2,4,2,7,4,4,7,7
   );
 
-  this.instname = new Array(70);
+  this.instname = new Array(78);
 
   // Instruction Names:
   this.instname[0] = "ADC";
@@ -2122,6 +2256,13 @@ var OpData = function () {
   this.instname[67] = "SRE";
   this.instname[68] = "SKB";
   this.instname[69] = "IGN";
+  this.instname[71] = "SHA";
+  this.instname[72] = "SHS";
+  this.instname[73] = "SHY";
+  this.instname[74] = "SHX";
+  this.instname[75] = "LAE";
+  this.instname[76] = "ANE";
+  this.instname[77] = "LXA";
 
   this.addrDesc = new Array(
     "Zero Page           ",
@@ -2227,6 +2368,22 @@ OpData.prototype = {
   INS_IGN: 69,
 
   INS_DUMMY: 70, // dummy instruction used for 'halting' the processor some cycles
+
+  // Unofficial "unstable" opcodes — behavior depends on 6502 bus arbitration
+  // during indexed addressing. The value stored is ANDed with (H+1) where H
+  // is the high byte of the base address before index addition.
+  // See https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
+  INS_SHA: 71,
+  INS_SHS: 72,
+  INS_SHY: 73,
+  INS_SHX: 74,
+  INS_LAE: 75,
+
+  // Unofficial opcodes with "magic" constant — the exact value varies between
+  // CPU revisions. Tests are designed to only check behavior where the magic
+  // value doesn't affect the outcome (A=$FF or Immediate=$00).
+  INS_ANE: 76,
+  INS_LXA: 77,
 
   // -------------------------------- //
 
