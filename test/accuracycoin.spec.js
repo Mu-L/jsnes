@@ -4,7 +4,19 @@ var NES = require("../src/nes");
 var Controller = require("../src/controller");
 
 // AccuracyCoin test result memory addresses and test names, organized by page.
-// Result values: 0x00 = not run, 0x01 = pass, 0x02+ = fail (error code), 0xFF = skipped
+//
+// Result encoding (stored at each test's memory address):
+//   0x00         = not run
+//   (n << 2) | 1 = pass  (0x01, 0x05, 0x09, 0x0D, ...)
+//   (n << 2) | 2 = fail  (0x06, 0x0A, 0x0E, ...)  — n is the failing sub-test
+//   0xFF         = skipped
+//
+// The low 2 bits distinguish pass (01) from fail (10). The upper bits encode
+// which sub-test or behavior variant produced the result. Most tests return
+// 0x01 on pass, but tests with multiple hardware behavior variants (SHA, SHS)
+// return different pass codes: Behavior 1 → 0x05, Behavior 2 → 0x09, etc.
+// The test harness uses (value & 3) === 1 to detect any pass code.
+//
 // "DRAW" tests (result in page $03xx) are informational only and skipped by "run all".
 var TEST_PAGES = [
   {
@@ -244,18 +256,7 @@ var TEST_PAGES = [
 ];
 
 // Tests known to fail — skip these until the emulator is fixed.
-// SHA/SHX/SHY/SHS: basic value computation and page-crossing glitch are correct,
-// but AccuracyCoin also tests OAM DMA bus hijacking (drops "& (H+1)" from the
-// stored value). DMA is handled atomically in sramDMA(), so bus-level interference
-// can't be modeled. See AccuracyCoin.asm lines 4441-4460, 4828-4848, 4884-4904.
 var KNOWN_FAILURES = {
-  // SHx DMA bus hijacking (see comment above)
-  0x0446: "SHA (d),Y DMA bus hijacking not emulated",
-  0x0447: "SHA abs,Y DMA bus hijacking not emulated",
-  0x0448: "SHS abs,Y DMA bus hijacking not emulated",
-  0x0449: "SHY abs,X DMA bus hijacking not emulated",
-  0x044a: "SHX abs,Y DMA bus hijacking not emulated",
-
   // AXS: fails sub-test 5 (flags check)
   0x0416: "AXS Immediate flags incorrect",
 
@@ -376,9 +377,17 @@ function runAccuracyCoin(romData) {
   };
 }
 
+// AccuracyCoin result encoding:
+//   0x00 = not run, 0xFF = skipped
+//   (n << 2) | 1 = pass (0x01, 0x05, 0x09, ...) — low bits encode behavior variant
+//   (n << 2) | 2 = fail (0x06, 0x0A, ...) — n is the failing sub-test number
+function isPass(value) {
+  return (value & 3) === 1;
+}
+
 function formatResult(value) {
   if (value === 0x00) return "NOT RUN";
-  if (value === 0x01) return "PASS";
+  if (isPass(value)) return "PASS";
   if (value === 0xff) return "SKIPPED";
   return (
     "FAIL (error 0x" + value.toString(16).toUpperCase().padStart(2, "0") + ")"
@@ -450,7 +459,7 @@ describe("AccuracyCoin", function () {
           if (result === 0x00) {
             this.skip(); // not run (likely due to earlier crash)
           }
-          if (result !== 0x01) {
+          if (!isPass(result)) {
             assert.fail(
               test.name +
                 ": " +
@@ -475,7 +484,7 @@ describe("AccuracyCoin", function () {
 
     ALL_TESTS.forEach(function (test) {
       var result = run.results[test.addr];
-      if (result === 0x01) {
+      if (isPass(result)) {
         pass++;
       } else if (result === 0x00 || result === 0xff) {
         notRun++;

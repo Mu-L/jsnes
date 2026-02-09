@@ -937,6 +937,15 @@ ChannelDM.prototype = {
         // Restart:
         this.playAddress = this.playStartAddress;
         this.playLengthCounter = this.playLength;
+        // On real hardware, when DMC is enabled and the sample buffer is
+        // empty, a DMA fetch fires within a few CPU cycles. Trigger it
+        // immediately so the DMASync loop in test ROMs can detect the
+        // first fetch. See https://www.nesdev.org/wiki/APU_DMC
+        if (!this.hasSample && this.playLengthCounter > 0) {
+          this.nextSample();
+          this.dmaCounter = 8;
+          this.shiftCounter = this.dmaFrequency;
+        }
       }
       this.irqGenerated = false;
     }

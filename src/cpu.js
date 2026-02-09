@@ -186,6 +186,10 @@ CPU.prototype = {
     this.ppuCatchupDots = 0;
     this.ppuFrameEnded = false;
 
+    // Snapshot how many CPU cycles until the next DMC DMA fetch. Used by
+    // SHx instructions to detect bus hijacking mid-instruction.
+    this._dmcFetchCycles = this._cyclesToNextDmcFetch();
+
     var opcode = this.nes.mmap.load(this.REG_PC + 1);
     this.dataBus = opcode;
     this.instrBusCycles = 1; // opcode fetch = 1 bus cycle
@@ -1409,7 +1413,24 @@ CPU.prototype = {
         // replaced with the stored value — a quirk of the 6502's internal
         // bus arbitration during indexed addressing.
         // See https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
-        var shaVal = this.REG_ACC & this.REG_X & (((baseHigh + 1) & 0xff) | 0);
+
+        // Stores always perform the indexed dummy read, even without page
+        // crossing. This is a real bus cycle needed for correct timing
+        // (and DMA overlap detection).
+        // See https://www.nesdev.org/wiki/CPU_addressing_modes
+        if (cycleAdd === 0) {
+          this.load(addr);
+        }
+        // When a DMC DMA fires during this instruction's read cycles, the
+        // DMA hijacks the internal bus and the "& (H+1)" factor is dropped.
+        // See _cyclesToNextDmcFetch() for the full explanation, and
+        // AccuracyCoin.asm lines 4441-4460 for the test ROM's DMA sync.
+        var dmaDuringInstr =
+          this._dmcFetchCycles > 0 &&
+          this._dmcFetchCycles <= this.instrBusCycles;
+        var shaVal = dmaDuringInstr
+          ? this.REG_ACC & this.REG_X
+          : this.REG_ACC & this.REG_X & (((baseHigh + 1) & 0xff) | 0);
         if (cycleAdd === 1) {
           addr = (shaVal << 8) | (addr & 0xff);
         }
@@ -1424,8 +1445,16 @@ CPU.prototype = {
         // Transfer A AND X to SP, then store SP AND (high byte + 1).
         // Same page-crossing address glitch as SHA.
         // See https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
+        if (cycleAdd === 0) {
+          this.load(addr); // forced dummy read (see case 71 comment)
+        }
+        var dmaDuringInstr2 =
+          this._dmcFetchCycles > 0 &&
+          this._dmcFetchCycles <= this.instrBusCycles;
         this.REG_SP = 0x0100 | (this.REG_ACC & this.REG_X);
-        var shsVal = this.REG_SP & 0xff & ((baseHigh + 1) & 0xff);
+        var shsVal = dmaDuringInstr2
+          ? this.REG_SP & 0xff
+          : this.REG_SP & 0xff & ((baseHigh + 1) & 0xff);
         if (cycleAdd === 1) {
           addr = (shsVal << 8) | (addr & 0xff);
         }
@@ -1440,7 +1469,15 @@ CPU.prototype = {
         // Store Y AND (high byte of base address + 1).
         // Same page-crossing address glitch as SHA.
         // See https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
-        var shyVal = this.REG_Y & ((baseHigh + 1) & 0xff);
+        if (cycleAdd === 0) {
+          this.load(addr); // forced dummy read (see case 71 comment)
+        }
+        var dmaDuringInstr3 =
+          this._dmcFetchCycles > 0 &&
+          this._dmcFetchCycles <= this.instrBusCycles;
+        var shyVal = dmaDuringInstr3
+          ? this.REG_Y
+          : this.REG_Y & ((baseHigh + 1) & 0xff);
         if (cycleAdd === 1) {
           addr = (shyVal << 8) | (addr & 0xff);
         }
@@ -1455,7 +1492,15 @@ CPU.prototype = {
         // Store X AND (high byte of base address + 1).
         // Same page-crossing address glitch as SHA.
         // See https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
-        var shxVal = this.REG_X & ((baseHigh + 1) & 0xff);
+        if (cycleAdd === 0) {
+          this.load(addr); // forced dummy read (see case 71 comment)
+        }
+        var dmaDuringInstr4 =
+          this._dmcFetchCycles > 0 &&
+          this._dmcFetchCycles <= this.instrBusCycles;
+        var shxVal = dmaDuringInstr4
+          ? this.REG_X
+          : this.REG_X & ((baseHigh + 1) & 0xff);
         if (cycleAdd === 1) {
           addr = (shxVal << 8) | (addr & 0xff);
         }
@@ -1608,7 +1653,67 @@ CPU.prototype = {
   // many bus operations the instruction has completed so far. The frame
   // loop then subtracts ppuCatchupDots from the total to avoid double-
   // counting.
+
+  // --- DMC DMA bus hijacking ---
   //
+  // On real hardware, DMC DMA reads happen mid-instruction: the DMA unit
+  // steals a bus cycle to fetch the next sample byte. Normally this is
+  // invisible to the CPU, but SHx instructions (SHA/SHX/SHY/SHS) compute
+  // their stored value partly from the address bus during an earlier cycle.
+  // When a DMA read hijacks the bus between the address setup and the
+  // store, the "& (H+1)" factor (derived from the high byte of the base
+  // address) is lost. For example, SHY normally stores Y & (H+1), but
+  // with a DMA it stores just Y.
+  //
+  // This emulator can't truly interleave DMA reads with instruction
+  // execution (audio is clocked after each instruction in nes.js), so
+  // instead we approximate it:
+  //
+  // 1. At the start of emulate(), snapshot _dmcFetchCycles = how many CPU
+  //    cycles until the next DMC DMA fetch (computed by this method).
+  //
+  // 2. Each SHx instruction case checks whether the DMA would fire during
+  //    its bus cycles: _dmcFetchCycles <= instrBusCycles. If so, the
+  //    "& (H+1)" factor is dropped from the stored value.
+  //
+  // 3. Store instructions always perform the indexed dummy read even
+  //    without page crossing (unlike loads which skip it), so
+  //    instrBusCycles is correct for timing the overlap.
+  //
+  // 4. The DMC initial load (papu.js ChannelDM.writeReg $4015) triggers
+  //    nextSample() immediately when the buffer is empty, matching the
+  //    real hardware timing that test ROMs depend on to synchronize their
+  //    DMA timing loops (DMASync in AccuracyCoin.asm).
+  //
+  // Returns a large number (0x7FFFFFFF) if no DMA fetch is pending.
+  // See https://www.nesdev.org/wiki/APU_DMC
+  _cyclesToNextDmcFetch: function () {
+    if (!this.nes.papu) {
+      return 0x7fffffff;
+    }
+    var dmc = this.nes.papu.dmc;
+    if (!dmc || !dmc.isEnabled || dmc.dmaFrequency <= 0) {
+      return 0x7fffffff;
+    }
+    if (!dmc.hasSample) {
+      return 0x7fffffff;
+    }
+    // shiftCounter counts down in units of (nCycles << 3); each tick of
+    // clockDmc consumes dmaFrequency units. When dmaCounter reaches 0,
+    // endOfSample fires and may call nextSample (the actual DMA fetch).
+    // The next DMA fetch occurs when all remaining dmaCounter ticks of
+    // the shift register have elapsed, which is:
+    //   (remaining shift ticks) / 8 CPU cycles per tick
+    // But the first tick fires when shiftCounter reaches 0, so the
+    // remaining CPU cycles to the next clockDmc call is ceil(shiftCounter/8).
+    // After that, (dmaCounter - 1) more clockDmc calls must fire, each
+    // taking dmaFrequency/8 CPU cycles.
+    var cyclesPerClock = dmc.dmaFrequency >> 3;
+    var cyclesToFirstClock = (dmc.shiftCounter + 7) >> 3;
+    if (cyclesToFirstClock <= 0) cyclesToFirstClock = cyclesPerClock;
+    return cyclesToFirstClock + (dmc.dmaCounter - 1) * cyclesPerClock;
+  },
+
   // The logic mirrors the frame loop's dot-by-dot path (sprite 0 hit,
   // scanline boundaries, NMI countdown). If VBlank fires mid-instruction,
   // we set ppuFrameEnded so the frame loop knows to break.
