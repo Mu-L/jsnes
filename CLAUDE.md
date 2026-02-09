@@ -134,4 +134,4 @@ The frame interrupt flag (`frameIrqActive`) is set unconditionally in step 4 of 
 - Timing management is the responsibility of the integrating application (60 FPS)
 - Controller input uses simple button state management with 8 buttons per controller
 - Liberally document things with comments, particularly if it's not obvious why something is like it is. Link to documentation and references (e.g. nesdev wiki pages) where it makes sense.
-- Update this document if you make mistakes and you want to remind yourself in the future not to do something.
+- Update CLAUDE.md if you make mistakes and you want to remind yourself in the future not to do something. Prefer to put things in the code or tests if you can, and don't restate it in CLAUDE.md unless it's high-level architecture or things that apply to lots of the code.
