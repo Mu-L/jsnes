@@ -257,9 +257,6 @@ var TEST_PAGES = [
 
 // Tests known to fail — skip these until the emulator is fixed.
 var KNOWN_FAILURES = {
-  // AXS: fails sub-test 5 (flags check)
-  0x0416: "AXS Immediate flags incorrect",
-
   // CPU interrupts: not cycle-accurate enough
   0x0461: "Interrupt flag latency not emulated",
   0x0462: "NMI overlap BRK not emulated",

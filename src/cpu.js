@@ -1181,17 +1181,11 @@ CPU.prototype = {
         // *******
 
         // Set X to (X AND A) - value.
+        // Like CMP, AXS sets N, Z, C but does NOT affect the V (overflow) flag.
+        // https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
         temp = (this.REG_X & this.REG_ACC) - this.load(addr);
         this.F_SIGN = (temp >> 7) & 1;
         this.F_ZERO = temp & 0xff;
-        if (
-          ((this.REG_X ^ temp) & 0x80) !== 0 &&
-          ((this.REG_X ^ this.load(addr)) & 0x80) !== 0
-        ) {
-          this.F_OVERFLOW = 1;
-        } else {
-          this.F_OVERFLOW = 0;
-        }
         this.F_CARRY = temp < 0 ? 0 : 1;
         this.REG_X = temp & 0xff;
         break;
