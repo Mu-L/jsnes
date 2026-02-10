@@ -90,7 +90,7 @@ Webpack configuration creates UMD modules compatible with browsers and Node.js:
 
 ## Documentation and reference for the NES
 
-The nesdev wiki has tons of information about the NES. Browse this if you need to understand how things work, implementing a mapper, etc: https://www.nesdev.org/wiki/NES_reference_guide
+The nesdev wiki has tons of information about the NES. You should browse this before implementing something to understand how it works: https://www.nesdev.org/wiki/NES_reference_guide
 
 ## NES Hardware Accuracy
 
