@@ -47,13 +47,6 @@ class NES {
     this.romData = null;
 
     this.ui.updateStatus("Ready to load a ROM.");
-
-    this.frame = this.frame.bind(this);
-    this.buttonDown = this.buttonDown.bind(this);
-    this.buttonUp = this.buttonUp.bind(this);
-    this.zapperMove = this.zapperMove.bind(this);
-    this.zapperFireDown = this.zapperFireDown.bind(this);
-    this.zapperFireUp = this.zapperFireUp.bind(this);
   }
 
   // Resets the system
@@ -72,7 +65,7 @@ class NES {
     this.crashed = false;
   }
 
-  frame() {
+  frame = () => {
     if (this.crashed) {
       throw new Error(
         "Game has crashed. Call reset() or loadROM() to restart.",
@@ -167,31 +160,31 @@ class NES {
       throw e;
     }
     this.fpsFrameCount++;
-  }
+  };
 
-  buttonDown(controller, button) {
+  buttonDown = (controller, button) => {
     this.controllers[controller].buttonDown(button);
-  }
+  };
 
-  buttonUp(controller, button) {
+  buttonUp = (controller, button) => {
     this.controllers[controller].buttonUp(button);
-  }
+  };
 
-  zapperMove(x, y) {
+  zapperMove = (x, y) => {
     if (!this.mmap) return;
     this.mmap.zapperX = x;
     this.mmap.zapperY = y;
-  }
+  };
 
-  zapperFireDown() {
+  zapperFireDown = () => {
     if (!this.mmap) return;
     this.mmap.zapperFired = true;
-  }
+  };
 
-  zapperFireUp() {
+  zapperFireUp = () => {
     if (!this.mmap) return;
     this.mmap.zapperFired = false;
-  }
+  };
 
   getFPS() {
     const now = +new Date();
