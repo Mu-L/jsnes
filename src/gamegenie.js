@@ -5,7 +5,7 @@ function toDigit(letter) {
 }
 
 function toLetter(digit) {
-  return LETTER_VALUES.substr(digit, 1);
+  return LETTER_VALUES[digit];
 }
 
 function toHex(n, width) {
