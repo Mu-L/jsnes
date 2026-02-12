@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run format` - Auto-format all source code with Prettier
 - `npm run test:watch` - Run tests in watch mode for development
 - `npm run typecheck` - TypeScript type checking (verifies `.d.ts` files)
+- `node bench.js` - Run performance benchmark (~1800 fps baseline). Run this on major changes or when you suspect a performance regression/improvement.
 
 ## Code Architecture
 
