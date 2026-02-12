@@ -1,13 +1,13 @@
-const js = require("@eslint/js");
-const eslintConfigPrettier = require("eslint-config-prettier");
+import js from "@eslint/js";
+import eslintConfigPrettier from "eslint-config-prettier";
 
-module.exports = [
+export default [
   js.configs.recommended,
   eslintConfigPrettier,
   {
     languageOptions: {
       ecmaVersion: 2022,
-      sourceType: "commonjs",
+      sourceType: "module",
       globals: {
         // Browser globals
         window: "readonly",
@@ -15,12 +15,7 @@ module.exports = [
         navigator: "readonly",
         console: "readonly",
         // Node globals
-        module: "readonly",
-        require: "readonly",
-        exports: "readonly",
         process: "readonly",
-        __dirname: "readonly",
-        __filename: "readonly",
         Buffer: "readonly",
       },
     },

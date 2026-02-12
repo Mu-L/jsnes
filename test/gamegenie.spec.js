@@ -1,7 +1,7 @@
-const assert = require("chai").assert;
-const GameGenie = require("../src/gamegenie");
-const NES = require("../src/nes");
-const fs = require("fs");
+import { assert } from "chai";
+import GameGenie from "../src/gamegenie.js";
+import NES from "../src/nes.js";
+import fs from "fs";
 
 describe("GameGenie", function () {
   let gg = null;

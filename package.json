@@ -10,6 +10,7 @@
     "url": "git://github.com/bfirsh/jsnes.git"
   },
   "license": "Apache-2.0",
+  "type": "module",
   "scripts": {
     "build": "webpack",
     "typecheck": "tsc --noEmit",

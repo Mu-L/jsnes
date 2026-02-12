@@ -1,5 +1,5 @@
-const Mappers = require("./mappers");
-const Tile = require("./tile");
+import Mappers from "./mappers.js";
+import Tile from "./tile.js";
 
 class ROM {
   // Mirroring types (instance properties so they're accessible via
@@ -189,4 +189,4 @@ class ROM {
   }
 }
 
-module.exports = ROM;
+export default ROM;

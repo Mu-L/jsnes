@@ -1,4 +1,4 @@
-const utils = require("./utils");
+import { copyArrayElements } from "./utils.js";
 
 class Mapper0 {
   constructor(nes) {
@@ -357,7 +357,7 @@ class Mapper0 {
       let ram = this.nes.rom.batteryRam;
       if (ram !== null && ram.length === 0x2000) {
         // Load Battery RAM into memory:
-        utils.copyArrayElements(ram, 0, this.nes.cpu.mem, 0x6000, 0x2000);
+        copyArrayElements(ram, 0, this.nes.cpu.mem, 0x6000, 0x2000);
       }
     }
   }
@@ -367,7 +367,7 @@ class Mapper0 {
     bank %= this.nes.rom.romCount;
     //let data = this.nes.rom.rom[bank];
     //cpuMem.write(address,data,data.length);
-    utils.copyArrayElements(
+    copyArrayElements(
       this.nes.rom.rom[bank],
       0,
       this.nes.cpu.mem,
@@ -382,7 +382,7 @@ class Mapper0 {
     }
     this.nes.ppu.triggerRendering();
 
-    utils.copyArrayElements(
+    copyArrayElements(
       this.nes.rom.vrom[bank % this.nes.rom.vromCount],
       0,
       this.nes.ppu.vramMem,
@@ -391,13 +391,7 @@ class Mapper0 {
     );
 
     let vromTile = this.nes.rom.vromTile[bank % this.nes.rom.vromCount];
-    utils.copyArrayElements(
-      vromTile,
-      0,
-      this.nes.ppu.ptTile,
-      address >> 4,
-      256,
-    );
+    copyArrayElements(vromTile, 0, this.nes.ppu.ptTile, address >> 4, 256);
   }
 
   load32kRomBank(bank, address) {
@@ -426,7 +420,7 @@ class Mapper0 {
 
     let bank4k = Math.floor(bank1k / 4) % this.nes.rom.vromCount;
     let bankoffset = (bank1k % 4) * 1024;
-    utils.copyArrayElements(
+    copyArrayElements(
       this.nes.rom.vrom[bank4k],
       bankoffset,
       this.nes.ppu.vramMem,
@@ -450,7 +444,7 @@ class Mapper0 {
 
     let bank4k = Math.floor(bank2k / 2) % this.nes.rom.vromCount;
     let bankoffset = (bank2k % 2) * 2048;
-    utils.copyArrayElements(
+    copyArrayElements(
       this.nes.rom.vrom[bank4k],
       bankoffset,
       this.nes.ppu.vramMem,
@@ -471,7 +465,7 @@ class Mapper0 {
     let offset = (bank8k % 2) * 8192;
 
     //this.nes.cpu.mem.write(address,this.nes.rom.rom[bank16k],offset,8192);
-    utils.copyArrayElements(
+    copyArrayElements(
       this.nes.rom.rom[bank16k],
       offset,
       this.nes.cpu.mem,
@@ -1534,7 +1528,7 @@ class Mapper241 extends Mapper0 {
   }
 }
 
-module.exports = {
+export default {
   0: Mapper0,
   1: Mapper1,
   2: Mapper2,

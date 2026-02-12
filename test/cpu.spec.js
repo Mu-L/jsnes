@@ -1,10 +1,10 @@
-const assert = require("chai").assert;
-const CPU = require("../src/cpu");
+import { assert } from "chai";
+import CPU from "../src/cpu.js";
 
 // Based on https://github.com/gutomaia/wedNESday/blob/0.0.x/wednesday/cpu_6502_spec.py
 // ... which was based on https://github.com/nwidger/nintengo/blob/master/m65go2/instructions_test.go
 
-Status = {
+const Status = {
     C: 0b00000001, // Carry
     Z: 0b00000010, // Zero
     I: 0b00000100, // Interrupt Disable
@@ -15,7 +15,7 @@ Status = {
     N: 0b10000000, // Negative
 }
 
-REGISTER_MAP = {
+const REGISTER_MAP = {
     'PC': 'REG_PC',
     'SP': 'REG_SP',
     'A': 'REG_ACC',
@@ -23,7 +23,7 @@ REGISTER_MAP = {
     'Y': 'REG_Y',
 }
 
-FLAG_MAP = {
+const FLAG_MAP = {
     'C': 'F_CARRY',
     'Z': 'F_ZERO',
     'I': 'F_INTERRUPT',
@@ -44,7 +44,7 @@ MMAP.prototype.write = function (addr, val) {
     this.mem[addr] = val;
 };
 
-const GameGenie = require("../src/gamegenie");
+import GameGenie from "../src/gamegenie.js";
 
 const NES = function (mmap) {
     this.mmap = mmap;
@@ -167,8 +167,8 @@ describe("CPU", function () {
     }
 
     function cpu_push_word(word){
-        hi = (0xFF00 & word) >> 8;
-        lo = 0x00FF & word;
+        let hi = (0xFF00 & word) >> 8;
+        let lo = 0x00FF & word;
         cpu_push_byte(hi);
         cpu_push_byte(lo);
     }

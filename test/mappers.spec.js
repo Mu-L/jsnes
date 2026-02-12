@@ -1,5 +1,5 @@
-const assert = require("chai").assert;
-const Mappers = require("../src/mappers");
+import { assert } from "chai";
+import Mappers from "../src/mappers.js";
 
 describe("Mappers", function () {
   let mapper = null;

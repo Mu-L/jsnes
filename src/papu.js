@@ -1,4 +1,4 @@
-const utils = require("./utils");
+import { fromJSON, toJSON } from "./utils.js";
 
 const CPU_FREQ_NTSC = 1789772.5; //1789772.72727272d;
 // const CPU_FREQ_PAL = 1773447.4;
@@ -776,7 +776,7 @@ class PAPU {
   }
 
   toJSON() {
-    let obj = utils.toJSON(this);
+    let obj = toJSON(this);
     obj.dmc = this.dmc.toJSON();
     obj.noise = this.noise.toJSON();
     obj.square1 = this.square1.toJSON();
@@ -786,7 +786,7 @@ class PAPU {
   }
 
   fromJSON(s) {
-    utils.fromJSON(this, s);
+    fromJSON(this, s);
     this.dmc.fromJSON(s.dmc);
     this.noise.fromJSON(s.noise);
     this.square1.fromJSON(s.square1);
@@ -991,11 +991,11 @@ class ChannelDM {
   }
 
   toJSON() {
-    return utils.toJSON(this);
+    return toJSON(this);
   }
 
   fromJSON(s) {
-    utils.fromJSON(this, s);
+    fromJSON(this, s);
   }
 }
 
@@ -1124,11 +1124,11 @@ class ChannelNoise {
   }
 
   toJSON() {
-    return utils.toJSON(this);
+    return toJSON(this);
   }
 
   fromJSON(s) {
-    utils.fromJSON(this, s);
+    fromJSON(this, s);
   }
 }
 
@@ -1340,11 +1340,11 @@ class ChannelSquare {
   }
 
   toJSON() {
-    return utils.toJSON(this);
+    return toJSON(this);
   }
 
   fromJSON(s) {
-    utils.fromJSON(this, s);
+    fromJSON(this, s);
   }
 }
 
@@ -1481,12 +1481,12 @@ class ChannelTriangle {
   }
 
   toJSON() {
-    return utils.toJSON(this);
+    return toJSON(this);
   }
 
   fromJSON(s) {
-    utils.fromJSON(this, s);
+    fromJSON(this, s);
   }
 }
 
-module.exports = PAPU;
+export default PAPU;

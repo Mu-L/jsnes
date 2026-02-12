@@ -143,4 +143,4 @@ class GameGenie {
   }
 }
 
-module.exports = GameGenie;
+export default GameGenie;

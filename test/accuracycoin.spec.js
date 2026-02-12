@@ -1,7 +1,7 @@
-const assert = require("chai").assert;
-const fs = require("fs");
-const NES = require("../src/nes");
-const Controller = require("../src/controller");
+import { assert } from "chai";
+import fs from "fs";
+import NES from "../src/nes.js";
+import Controller from "../src/controller.js";
 
 // AccuracyCoin test result memory addresses and test names, organized by page.
 //

@@ -1,6 +1,6 @@
-const assert = require("chai").assert;
-const fs = require("fs");
-const NES = require("../src/nes");
+import { assert } from "chai";
+import fs from "fs";
+import NES from "../src/nes.js";
 
 // Error code descriptions from nestest.txt, keyed by [byte, code].
 // Byte 0x02 errors:

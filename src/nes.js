@@ -1,9 +1,9 @@
-const CPU = require("./cpu");
-const Controller = require("./controller");
-const PPU = require("./ppu");
-const PAPU = require("./papu");
-const GameGenie = require("./gamegenie");
-const ROM = require("./rom");
+import CPU from "./cpu.js";
+import Controller from "./controller.js";
+import PPU from "./ppu.js";
+import PAPU from "./papu.js";
+import GameGenie from "./gamegenie.js";
+import ROM from "./rom.js";
 
 class NES {
   constructor(opts) {
@@ -243,4 +243,4 @@ class NES {
   }
 }
 
-module.exports = NES;
+export default NES;

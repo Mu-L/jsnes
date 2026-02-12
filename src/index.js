@@ -1,5 +1,5 @@
-module.exports = {
-  Controller: require("./controller"),
-  GameGenie: require("./gamegenie"),
-  NES: require("./nes"),
-};
+import Controller from "./controller.js";
+import GameGenie from "./gamegenie.js";
+import NES from "./nes.js";
+
+export { Controller, GameGenie, NES };

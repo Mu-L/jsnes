@@ -1,4 +1,4 @@
-const utils = require("./utils");
+import { fromJSON, toJSON } from "./utils.js";
 
 class CPU {
   // IRQ Types
@@ -1852,11 +1852,11 @@ class CPU {
   ];
 
   toJSON() {
-    return utils.toJSON(this);
+    return toJSON(this);
   }
 
   fromJSON(s) {
-    utils.fromJSON(this, s);
+    fromJSON(this, s);
   }
 }
 
@@ -2515,4 +2515,4 @@ class OpData {
   }
 }
 
-module.exports = CPU;
+export default CPU;

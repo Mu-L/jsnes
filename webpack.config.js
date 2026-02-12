@@ -1,8 +1,8 @@
-const path = require("path");
-const TerserPlugin = require("terser-webpack-plugin");
-const ESLintPlugin = require("eslint-webpack-plugin");
+import path from "path";
+import TerserPlugin from "terser-webpack-plugin";
+import ESLintPlugin from "eslint-webpack-plugin";
 
-module.exports = {
+export default {
   entry: {
     jsnes: "./src/index.js",
     "jsnes.min": "./src/index.js",
@@ -10,7 +10,7 @@ module.exports = {
   mode: "production",
   devtool: "source-map",
   output: {
-    path: path.resolve(__dirname, "dist"),
+    path: path.resolve(import.meta.dirname, "dist"),
     filename: "[name].js",
     library: "jsnes",
     libraryTarget: "umd",

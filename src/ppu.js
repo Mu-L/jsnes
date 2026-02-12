@@ -1,5 +1,5 @@
-const Tile = require("./tile");
-const utils = require("./utils");
+import Tile from "./tile.js";
+import { fromJSON, toJSON } from "./utils.js";
 
 class PPU {
   // Status flags:
@@ -1469,7 +1469,7 @@ class PPU {
 
   toJSON() {
     let i;
-    let state = utils.toJSON(this);
+    let state = toJSON(this);
 
     state.nameTable = [];
     for (i = 0; i < this.nameTable.length; i++) {
@@ -1487,7 +1487,7 @@ class PPU {
   fromJSON(state) {
     let i;
 
-    utils.fromJSON(this, state);
+    fromJSON(this, state);
 
     for (i = 0; i < this.nameTable.length; i++) {
       this.nameTable[i].fromJSON(state.nameTable[i]);
@@ -1722,4 +1722,4 @@ class PaletteTable {
   }
 }
 
-module.exports = PPU;
+export default PPU;
