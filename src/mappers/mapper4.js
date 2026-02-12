@@ -1,18 +1,14 @@
 import Mapper0 from "./mapper0.js";
 
 class Mapper4 extends Mapper0 {
-  constructor(nes) {
-    super(nes);
-
-    this.CMD_SEL_2_1K_VROM_0000 = 0;
-    this.CMD_SEL_2_1K_VROM_0800 = 1;
-    this.CMD_SEL_1K_VROM_1000 = 2;
-    this.CMD_SEL_1K_VROM_1400 = 3;
-    this.CMD_SEL_1K_VROM_1800 = 4;
-    this.CMD_SEL_1K_VROM_1C00 = 5;
-    this.CMD_SEL_ROM_PAGE1 = 6;
-    this.CMD_SEL_ROM_PAGE2 = 7;
-  }
+  static CMD_SEL_2_1K_VROM_0000 = 0;
+  static CMD_SEL_2_1K_VROM_0800 = 1;
+  static CMD_SEL_1K_VROM_1000 = 2;
+  static CMD_SEL_1K_VROM_1400 = 3;
+  static CMD_SEL_1K_VROM_1800 = 4;
+  static CMD_SEL_1K_VROM_1C00 = 5;
+  static CMD_SEL_ROM_PAGE1 = 6;
+  static CMD_SEL_ROM_PAGE2 = 7;
 
   reset() {
     super.reset();
@@ -98,7 +94,7 @@ class Mapper4 extends Mapper0 {
 
   executeCommand(cmd, arg) {
     switch (cmd) {
-      case this.CMD_SEL_2_1K_VROM_0000:
+      case Mapper4.CMD_SEL_2_1K_VROM_0000:
         // Select 2 1KB VROM pages at 0x0000:
         if (this.chrAddressSelect === 0) {
           this.load1kVromBank(arg, 0x0000);
@@ -109,7 +105,7 @@ class Mapper4 extends Mapper0 {
         }
         break;
 
-      case this.CMD_SEL_2_1K_VROM_0800:
+      case Mapper4.CMD_SEL_2_1K_VROM_0800:
         // Select 2 1KB VROM pages at 0x0800:
         if (this.chrAddressSelect === 0) {
           this.load1kVromBank(arg, 0x0800);
@@ -120,7 +116,7 @@ class Mapper4 extends Mapper0 {
         }
         break;
 
-      case this.CMD_SEL_1K_VROM_1000:
+      case Mapper4.CMD_SEL_1K_VROM_1000:
         // Select 1K VROM Page at 0x1000:
         if (this.chrAddressSelect === 0) {
           this.load1kVromBank(arg, 0x1000);
@@ -129,7 +125,7 @@ class Mapper4 extends Mapper0 {
         }
         break;
 
-      case this.CMD_SEL_1K_VROM_1400:
+      case Mapper4.CMD_SEL_1K_VROM_1400:
         // Select 1K VROM Page at 0x1400:
         if (this.chrAddressSelect === 0) {
           this.load1kVromBank(arg, 0x1400);
@@ -138,7 +134,7 @@ class Mapper4 extends Mapper0 {
         }
         break;
 
-      case this.CMD_SEL_1K_VROM_1800:
+      case Mapper4.CMD_SEL_1K_VROM_1800:
         // Select 1K VROM Page at 0x1800:
         if (this.chrAddressSelect === 0) {
           this.load1kVromBank(arg, 0x1800);
@@ -147,7 +143,7 @@ class Mapper4 extends Mapper0 {
         }
         break;
 
-      case this.CMD_SEL_1K_VROM_1C00:
+      case Mapper4.CMD_SEL_1K_VROM_1C00:
         // Select 1K VROM Page at 0x1C00:
         if (this.chrAddressSelect === 0) {
           this.load1kVromBank(arg, 0x1c00);
@@ -156,7 +152,7 @@ class Mapper4 extends Mapper0 {
         }
         break;
 
-      case this.CMD_SEL_ROM_PAGE1:
+      case Mapper4.CMD_SEL_ROM_PAGE1:
         if (this.prgAddressChanged) {
           // Load the two hardwired banks:
           if (this.prgAddressSelect === 0) {
@@ -175,7 +171,7 @@ class Mapper4 extends Mapper0 {
         }
         break;
 
-      case this.CMD_SEL_ROM_PAGE2:
+      case Mapper4.CMD_SEL_ROM_PAGE2:
         // Select second switchable ROM page:
         this.load8kRomBank(arg, 0xa000);
 
