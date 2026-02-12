@@ -1,5 +1,5 @@
-var assert = require("chai").assert;
-var CPU = require("../src/cpu");
+const assert = require("chai").assert;
+const CPU = require("../src/cpu");
 
 // Based on https://github.com/gutomaia/wedNESday/blob/0.0.x/wednesday/cpu_6502_spec.py
 // ... which was based on https://github.com/nwidger/nintengo/blob/master/m65go2/instructions_test.go
@@ -32,7 +32,7 @@ FLAG_MAP = {
     'N': 'F_SIGN',
 }
 
-var MMAP = function (mem) {
+const MMAP = function (mem) {
     this.mem = mem;
 };
 
@@ -44,9 +44,9 @@ MMAP.prototype.write = function (addr, val) {
     this.mem[addr] = val;
 };
 
-var GameGenie = require("../src/gamegenie");
+const GameGenie = require("../src/gamegenie");
 
-var NES = function (mmap) {
+const NES = function (mmap) {
     this.mmap = mmap;
     this.gameGenie = new GameGenie();
 };
@@ -55,11 +55,11 @@ NES.prototype.stop = function () {
 };
 
 describe("CPU", function () {
-    var cpu = null;
-    var mmap = null;
-    var nes = null;
-    var mem = null;
-    var perform_check_cycles = true;
+    let cpu = null;
+    let mmap = null;
+    let nes = null;
+    let mem = null;
+    let perform_check_cycles = true;
 
     beforeEach(function (done) {
         mem = Array.apply(
@@ -106,7 +106,7 @@ describe("CPU", function () {
     }
 
     function execute() {
-        var cycles = cpu.emulate();
+        let cycles = cpu.emulate();
         return cycles
     }
 
@@ -114,19 +114,18 @@ describe("CPU", function () {
         if (register == 'P') {
             cpu.setStatus(value);
         } else {
-            var reg = REGISTER_MAP[register];
+            let reg = REGISTER_MAP[register];
             cpu[reg] = value;
         }
     }
 
     function cpu_register(register) {
-        var val = null
         if (register == 'P') {
             // Mask bits 4-5: B and unused don't exist as physical flags
             return cpu.getStatus() & 0xcf;
         }
-        var reg = REGISTER_MAP[register];
-        var val = cpu[reg];
+        const reg = REGISTER_MAP[register];
+        const val = cpu[reg];
         if (register == 'PC') {
             return val + 1;
         }
@@ -134,8 +133,8 @@ describe("CPU", function () {
     }
 
     function cpu_flag(flag){
-        var fg = FLAG_MAP[flag]
-        var val = Boolean(cpu[fg])
+        let fg = FLAG_MAP[flag]
+        let val = Boolean(cpu[fg])
         if (flag == 'Z') {
             return !val;
         }
@@ -143,7 +142,7 @@ describe("CPU", function () {
     }
 
     function cpu_set_flag(flag){
-        var fg = FLAG_MAP[flag];
+        let fg = FLAG_MAP[flag];
         if (flag == 'Z') {
             cpu[fg] = 0;
         } else {
@@ -152,7 +151,7 @@ describe("CPU", function () {
     }
 
     function cpu_unset_flag(flag){
-        var fg = FLAG_MAP[flag];
+        let fg = FLAG_MAP[flag];
         if (flag == 'Z') {
             cpu[fg] = 1;
         } else {
@@ -176,13 +175,13 @@ describe("CPU", function () {
     }
 
     function cpu_pull_word() {
-        var b1 = cpu_pull_byte();
-        var b2 = cpu_pull_byte() << 8;
+        let b1 = cpu_pull_byte();
+        let b2 = cpu_pull_byte() << 8;
         return b1 + b2;
     }
 
     function cpu_force_interrupt(type) {
-        var typeMap = {
+        let typeMap = {
             'irq': cpu.IRQ_NORMAL,
             'nmi': cpu.IRQ_NMI,
             'rst': cpu.IRQ_RESET,
@@ -197,7 +196,7 @@ describe("CPU", function () {
     function execute_interrupt() {
         // Replicate interrupt handling from cpu.emulate() without
         // executing the instruction at the target address
-        var temp =
+        let temp =
             cpu.F_CARRY |
             ((cpu.F_ZERO === 0 ? 1 : 0) << 1) |
             (cpu.F_INTERRUPT << 2) |
@@ -289,7 +288,7 @@ describe("CPU", function () {
         memory_set(0x101, 0x84);
         memory_set(0x102, 0x0);
         memory_set(0x85, 0xff);
-        var cycles = execute();
+        let cycles = execute();
         if (check_cycles()) {
             assert.equal(cycles, 0x4);
         };
@@ -304,7 +303,7 @@ describe("CPU", function () {
         memory_set(0x101, 0xff);
         memory_set(0x102, 0x2);
         memory_set(0x300, 0xff);
-        var cycles = execute();
+        let cycles = execute();
         if (check_cycles()) {
             assert.equal(cycles, 0x5);
         };
@@ -318,7 +317,7 @@ describe("CPU", function () {
         memory_set(0x101, 0x84);
         memory_set(0x102, 0x0);
         memory_set(0x85, 0xff);
-        var cycles = execute();
+        let cycles = execute();
         if (check_cycles()) {
             assert.equal(cycles, 0x4);
         };
@@ -329,7 +328,7 @@ describe("CPU", function () {
         memory_set(0x101, 0xff);
         memory_set(0x102, 0x2);
         memory_set(0x300, 0xff);
-        var cycles = execute();
+        cycles = execute();
         if (check_cycles()) {
             assert.equal(cycles, 0x5);
         };
@@ -359,7 +358,7 @@ describe("CPU", function () {
         memory_set(0x84, 0x86);
         memory_set(0x85, 0x0);
         memory_set(0x87, 0xff);
-        var cycles = execute();
+        let cycles = execute();
         if (check_cycles()) {
             assert.equal(cycles, 0x5);
         };
@@ -371,7 +370,7 @@ describe("CPU", function () {
         memory_set(0x84, 0xff);
         memory_set(0x85, 0x2);
         memory_set(0x300, 0xff);
-        var cycles = execute();
+        cycles = execute();
         if (check_cycles()) {
             assert.equal(cycles, 0x6);
         };
@@ -3591,7 +3590,7 @@ describe("CPU", function () {
         cpu_set_flag("C");
         cpu_pc(0x100);
         memory_set(0x100, 0x90);
-        var cycles = execute();
+        let cycles = execute();
         if (check_cycles()) {
             assert.equal(cycles, 0x2);
         };
@@ -3600,7 +3599,7 @@ describe("CPU", function () {
         cpu_pc(0x100);
         memory_set(0x100, 0x90);
         memory_set(0x101, 0x2);
-        var cycles = execute();
+        cycles = execute();
         if (check_cycles()) {
             assert.equal(cycles, 0x3);
         };
@@ -3609,7 +3608,7 @@ describe("CPU", function () {
         cpu_pc(0x100);
         memory_set(0x100, 0x90);
         memory_set(0x101, 0xfd);
-        var cycles = execute();
+        cycles = execute();
         if (check_cycles()) {
             assert.equal(cycles, 0x4);
         };
@@ -3663,7 +3662,7 @@ describe("CPU", function () {
         cpu_pc(0x150);
         memory_set(0x150, 0x30);
         memory_set(0x151, 0x02);
-        var cycles = execute();
+        let cycles = execute();
         assert.equal(cycles, 2);
         assert.equal(cpu_register("PC"), 0x152);
 
@@ -3673,7 +3672,7 @@ describe("CPU", function () {
         cpu_pc(0x150);
         memory_set(0x150, 0x30);
         memory_set(0x151, 0x02);
-        var cycles = execute();
+        cycles = execute();
         assert.equal(cycles, 3);
         assert.equal(cpu_register("PC"), 0x154);
 
@@ -3683,7 +3682,7 @@ describe("CPU", function () {
         cpu_pc(0x1f0);
         memory_set(0x1f0, 0x30);
         memory_set(0x1f1, 0x20);
-        var cycles = execute();
+        cycles = execute();
         assert.equal(cycles, 4);
         assert.equal(cpu_register("PC"), 0x212);
 

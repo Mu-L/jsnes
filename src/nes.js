@@ -1,11 +1,11 @@
-var CPU = require("./cpu");
-var Controller = require("./controller");
-var PPU = require("./ppu");
-var PAPU = require("./papu");
-var GameGenie = require("./gamegenie");
-var ROM = require("./rom");
+const CPU = require("./cpu");
+const Controller = require("./controller");
+const PPU = require("./ppu");
+const PAPU = require("./papu");
+const GameGenie = require("./gamegenie");
+const ROM = require("./rom");
 
-var NES = function (opts) {
+const NES = function (opts) {
   this.opts = {
     onFrame: function () {},
     onAudioSample: null,
@@ -19,8 +19,7 @@ var NES = function (opts) {
     sampleRate: 48000, // Sound sample rate in hz
   };
   if (typeof opts !== "undefined") {
-    var key;
-    for (key in this.opts) {
+    for (const key in this.opts) {
       if (typeof opts[key] !== "undefined") {
         this.opts[key] = opts[key];
       }
@@ -80,10 +79,10 @@ NES.prototype = {
       );
     }
     this.ppu.startFrame();
-    var cycles = 0;
-    var cpu = this.cpu;
-    var ppu = this.ppu;
-    var papu = this.papu;
+    let cycles = 0;
+    const cpu = this.cpu;
+    const ppu = this.ppu;
+    const papu = this.papu;
     try {
       FRAMELOOP: for (;;) {
         if (cpu.cyclesToHalt === 0) {
@@ -124,7 +123,7 @@ NES.prototype = {
           }
         }
 
-        var finalCurX = ppu.curX + cycles;
+        const finalCurX = ppu.curX + cycles;
         if (
           !ppu.requestEndFrame &&
           finalCurX < 341 &&
@@ -195,8 +194,8 @@ NES.prototype = {
   },
 
   getFPS: function () {
-    var now = +new Date();
-    var fps = null;
+    const now = +new Date();
+    let fps = null;
     if (this.lastFpsTime) {
       fps = this.fpsFrameCount / ((now - this.lastFpsTime) / 1000);
     }

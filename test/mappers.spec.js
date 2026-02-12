@@ -1,9 +1,9 @@
-var assert = require("chai").assert;
-var Mappers = require("../src/mappers");
+const assert = require("chai").assert;
+const Mappers = require("../src/mappers");
 
 describe("Mappers", function () {
-  var mapper = null;
-  var mockNes = null;
+  let mapper = null;
+  let mockNes = null;
 
   beforeEach(function () {
     // Create minimal mock NES with CPU memory
@@ -22,12 +22,12 @@ describe("Mappers", function () {
   describe("write", function () {
     it("does not modify ROM when writing to ROM addresses", function () {
       // Set up some ROM data at 0x8000
-      var romAddress = 0x8000;
-      var originalValue = 0x42;
+      let romAddress = 0x8000;
+      let originalValue = 0x42;
       mockNes.cpu.mem[romAddress] = originalValue;
 
       // Attempt to write a different value
-      var newValue = 0xff;
+      let newValue = 0xff;
       mapper.write(romAddress, newValue);
 
       // Verify ROM was not modified
@@ -35,8 +35,8 @@ describe("Mappers", function () {
     });
 
     it("does not modify ROM at high ROM addresses", function () {
-      var romAddress = 0xfffc;
-      var originalValue = 0xab;
+      let romAddress = 0xfffc;
+      let originalValue = 0xab;
       mockNes.cpu.mem[romAddress] = originalValue;
 
       mapper.write(romAddress, 0x00);
@@ -45,7 +45,7 @@ describe("Mappers", function () {
     });
 
     it("allows writes to cartridge SRAM", function () {
-      var sramAddress = 0x6000;
+      let sramAddress = 0x6000;
       mockNes.cpu.mem[sramAddress] = 0x00;
 
       mapper.write(sramAddress, 0x42);
@@ -54,7 +54,7 @@ describe("Mappers", function () {
     });
 
     it("allows writes to RAM", function () {
-      var ramAddress = 0x0200;
+      let ramAddress = 0x0200;
       mockNes.cpu.mem[ramAddress] = 0x00;
 
       mapper.write(ramAddress, 0x42);
@@ -65,8 +65,8 @@ describe("Mappers", function () {
 
   describe("writelow", function () {
     it("does not modify ROM when writing to ROM addresses", function () {
-      var romAddress = 0x8000;
-      var originalValue = 0x42;
+      let romAddress = 0x8000;
+      let originalValue = 0x42;
       mockNes.cpu.mem[romAddress] = originalValue;
 
       mapper.writelow(romAddress, 0xff);

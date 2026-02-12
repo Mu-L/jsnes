@@ -1,4 +1,4 @@
-var LETTER_VALUES = "APZLGITYEOXUKSVN";
+const LETTER_VALUES = "APZLGITYEOXUKSVN";
 
 function toDigit(letter) {
   return LETTER_VALUES.indexOf(letter);
@@ -9,11 +9,11 @@ function toLetter(digit) {
 }
 
 function toHex(n, width) {
-  var s = n.toString(16);
+  const s = n.toString(16);
   return "0000".substring(0, width - s.length) + s;
 }
 
-var GameGenie = function () {
+const GameGenie = function () {
   this.patches = [];
   this.enabled = true;
 };
@@ -42,7 +42,7 @@ GameGenie.prototype = {
   applyCodes: function (addr, value) {
     if (!this.enabled) return value;
 
-    for (var i = 0; i < this.patches.length; ++i) {
+    for (let i = 0; i < this.patches.length; ++i) {
       if (this.patches[i].addr === (addr & 0x7fff)) {
         if (
           this.patches[i].key === undefined ||
@@ -58,11 +58,11 @@ GameGenie.prototype = {
   decode: function (code) {
     if (code.indexOf(":") !== -1) return this.decodeHex(code);
 
-    var digits = code.toUpperCase().split("").map(toDigit);
+    const digits = code.toUpperCase().split("").map(toDigit);
 
-    var value =
+    let value =
       ((digits[0] & 8) << 4) + ((digits[1] & 7) << 4) + (digits[0] & 7);
-    var addr =
+    const addr =
       ((digits[3] & 7) << 12) +
       ((digits[4] & 8) << 8) +
       ((digits[5] & 7) << 8) +
@@ -70,7 +70,7 @@ GameGenie.prototype = {
       ((digits[2] & 7) << 4) +
       (digits[3] & 8) +
       (digits[4] & 7);
-    var key;
+    let key;
 
     if (digits.length === 8) {
       value += digits[7] & 8;
@@ -83,13 +83,13 @@ GameGenie.prototype = {
       value += digits[5] & 8;
     }
 
-    var wantskey = !!(digits[2] >> 3);
+    const wantskey = !!(digits[2] >> 3);
 
     return { value: value, addr: addr, wantskey: wantskey, key: key };
   },
 
   encodeHex: function (addr, value, key, wantskey) {
-    var s = toHex(addr, 4) + ":" + toHex(value, 2);
+    let s = toHex(addr, 4) + ":" + toHex(value, 2);
 
     if (key !== undefined || wantskey) {
       s += "?";
@@ -103,13 +103,13 @@ GameGenie.prototype = {
   },
 
   decodeHex: function (s) {
-    var match = s.match(/([0-9a-fA-F]+):([0-9a-fA-F]+)(\?[0-9a-fA-F]*)?/);
+    const match = s.match(/([0-9a-fA-F]+):([0-9a-fA-F]+)(\?[0-9a-fA-F]*)?/);
     if (!match) return null;
 
-    var addr = parseInt(match[1], 16);
-    var value = parseInt(match[2], 16);
-    var wantskey = match[3] !== undefined;
-    var key =
+    const addr = parseInt(match[1], 16);
+    const value = parseInt(match[2], 16);
+    const wantskey = match[3] !== undefined;
+    const key =
       match[3] !== undefined && match[3].length > 1
         ? parseInt(match[3].substring(1), 16)
         : undefined;
@@ -118,7 +118,7 @@ GameGenie.prototype = {
   },
 
   encode: function (addr, value, key, wantskey) {
-    var digits = Array(6);
+    const digits = Array(6);
 
     digits[0] = (value & 7) + ((value >> 4) & 8);
     digits[1] = ((value >> 4) & 7) + ((addr >> 4) & 8);
@@ -137,7 +137,7 @@ GameGenie.prototype = {
       digits[7] = ((key >> 4) & 7) + (value & 8);
     }
 
-    var code = digits.map(toLetter).join("");
+    const code = digits.map(toLetter).join("");
 
     return code;
   },

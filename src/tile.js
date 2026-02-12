@@ -1,4 +1,4 @@
-var Tile = function () {
+const Tile = function () {
   // Tile data:
   this.pix = new Array(64);
 

@@ -1,19 +1,19 @@
-var utils = require("./utils");
+const utils = require("./utils");
 
-var CPU_FREQ_NTSC = 1789772.5; //1789772.72727272d;
-// var CPU_FREQ_PAL = 1773447.4;
+const CPU_FREQ_NTSC = 1789772.5; //1789772.72727272d;
+// const CPU_FREQ_PAL = 1773447.4;
 
 // Frame counter step timing tables (in CPU cycles).
 // The APU frame counter fires at these specific cycle positions within each
 // sequence. On real hardware, the APU clock is half the CPU clock, so
 // these correspond to APU cycles 3728.5, 7456.5, 11185.5, 14914.5 etc.
 // See https://www.nesdev.org/wiki/APU_Frame_Counter
-var FRAME_STEPS_4 = [7457, 14913, 22371, 29829];
-var FRAME_STEPS_5 = [7457, 14913, 22371, 29829, 37281];
-var FRAME_PERIOD_4 = 29830; // Total CPU cycles for 4-step sequence
-var FRAME_PERIOD_5 = 37282; // Total CPU cycles for 5-step sequence
+const FRAME_STEPS_4 = [7457, 14913, 22371, 29829];
+const FRAME_STEPS_5 = [7457, 14913, 22371, 29829, 37281];
+const FRAME_PERIOD_4 = 29830; // Total CPU cycles for 4-step sequence
+const FRAME_PERIOD_5 = 37282; // Total CPU cycles for 5-step sequence
 
-var PAPU = function (nes) {
+const PAPU = function (nes) {
   this.nes = nes;
 
   this.square1 = new ChannelSquare(this, true);
@@ -94,7 +94,7 @@ var PAPU = function (nes) {
   this.initDACtables();
 
   // Init sound registers:
-  for (var i = 0; i < 0x14; i++) {
+  for (let i = 0; i < 0x14; i++) {
     if (i === 0x10) {
       this.writeReg(0x4010, 0x10);
     } else {
@@ -149,7 +149,7 @@ PAPU.prototype = {
   // eslint-disable-next-line no-unused-vars
   readReg: function (address) {
     // Read 0x4015:
-    var tmp = 0;
+    let tmp = 0;
     tmp |= this.square1.getLengthStatus();
     tmp |= this.square2.getLengthStatus() << 1;
     tmp |= this.triangle.getLengthStatus() << 2;
@@ -267,11 +267,11 @@ PAPU.prototype = {
     // to avoid processing beyond the next audio sample point, but the frame
     // counter must see the true cycle count for accurate step timing.
     // Subtract any cycles already advanced by APU catch-up.
-    var frameCounterCycles = nCycles - (frameCounterAlreadyAdvanced || 0);
+    let frameCounterCycles = nCycles - (frameCounterAlreadyAdvanced || 0);
 
     // Don't process channel ticks beyond next sampling:
     nCycles += this.extraCycles;
-    var maxCycles = this.sampleTimerMax - this.sampleTimer;
+    let maxCycles = this.sampleTimerMax - this.sampleTimer;
     if (nCycles << 10 > maxCycles) {
       this.extraCycles = ((nCycles << 10) - maxCycles) >> 10;
       nCycles -= this.extraCycles;
@@ -279,11 +279,11 @@ PAPU.prototype = {
       this.extraCycles = 0;
     }
 
-    var dmc = this.dmc;
-    var triangle = this.triangle;
-    var square1 = this.square1;
-    var square2 = this.square2;
-    var noise = this.noise;
+    let dmc = this.dmc;
+    let triangle = this.triangle;
+    let square1 = this.square1;
+    let square2 = this.square2;
+    let noise = this.noise;
 
     // Clock DMC:
     if (dmc.isEnabled) {
@@ -338,7 +338,7 @@ PAPU.prototype = {
     }
 
     // Clock noise channel Prog timer:
-    var acc_c = nCycles;
+    let acc_c = nCycles;
     if (noise.progTimerCount - acc_c > 0) {
       // Do all cycles at once:
       noise.progTimerCount -= acc_c;
@@ -386,8 +386,8 @@ PAPU.prototype = {
     // Uses the uncapped cycle count to maintain accurate timing.
     // See https://www.nesdev.org/wiki/APU_Frame_Counter
     this.frameCycleCounter += frameCounterCycles;
-    var steps = this.countSequence === 0 ? FRAME_STEPS_4 : FRAME_STEPS_5;
-    var period = this.countSequence === 0 ? FRAME_PERIOD_4 : FRAME_PERIOD_5;
+    let steps = this.countSequence === 0 ? FRAME_STEPS_4 : FRAME_STEPS_5;
+    let period = this.countSequence === 0 ? FRAME_PERIOD_4 : FRAME_PERIOD_5;
     while (this.frameCycleCounter >= steps[this.frameStep]) {
       this.fireFrameStep(this.frameStep);
       this.frameStep++;
@@ -415,8 +415,8 @@ PAPU.prototype = {
   // DMC DMA timing or audio generation. See cpu._apuCatchUp().
   advanceFrameCounter: function (nCycles) {
     this.frameCycleCounter += nCycles;
-    var steps = this.countSequence === 0 ? FRAME_STEPS_4 : FRAME_STEPS_5;
-    var period = this.countSequence === 0 ? FRAME_PERIOD_4 : FRAME_PERIOD_5;
+    let steps = this.countSequence === 0 ? FRAME_STEPS_4 : FRAME_STEPS_5;
+    let period = this.countSequence === 0 ? FRAME_PERIOD_4 : FRAME_PERIOD_5;
     while (this.frameCycleCounter >= steps[this.frameStep]) {
       this.fireFrameStep(this.frameStep);
       this.frameStep++;
@@ -550,7 +550,7 @@ PAPU.prototype = {
 
   // Samples the channels, mixes the output together, then writes to buffer.
   sample: function () {
-    var sq_index, tnd_index;
+    let sq_index, tnd_index;
 
     if (this.accCount > 0) {
       this.smpSquare1 <<= 4;
@@ -572,7 +572,7 @@ PAPU.prototype = {
       this.smpDmc = this.dmc.sample << 4;
     }
 
-    var smpNoise = Math.floor((this.noise.accValue << 4) / this.noise.accCount);
+    let smpNoise = Math.floor((this.noise.accValue << 4) / this.noise.accCount);
     this.noise.accValue = smpNoise >> 4;
     this.noise.accCount = 1;
 
@@ -594,7 +594,7 @@ PAPU.prototype = {
     if (tnd_index >= this.tnd_table.length) {
       tnd_index = this.tnd_table.length - 1;
     }
-    var sampleValueL =
+    let sampleValueL =
       this.square_table[sq_index] + this.tnd_table[tnd_index] - this.dcValue;
 
     // Right channel:
@@ -613,17 +613,17 @@ PAPU.prototype = {
     if (tnd_index >= this.tnd_table.length) {
       tnd_index = this.tnd_table.length - 1;
     }
-    var sampleValueR =
+    let sampleValueR =
       this.square_table[sq_index] + this.tnd_table[tnd_index] - this.dcValue;
 
     // Remove DC from left channel:
-    var smpDiffL = sampleValueL - this.prevSampleL;
+    let smpDiffL = sampleValueL - this.prevSampleL;
     this.prevSampleL += smpDiffL;
     this.smpAccumL += smpDiffL - (this.smpAccumL >> 10);
     sampleValueL = this.smpAccumL;
 
     // Remove DC from right channel:
-    var smpDiffR = sampleValueR - this.prevSampleR;
+    let smpDiffR = sampleValueR - this.prevSampleR;
     this.prevSampleR += smpDiffR;
     this.smpAccumR += smpDiffR - (this.smpAccumR >> 10);
     sampleValueR = this.smpAccumR;
@@ -666,7 +666,7 @@ PAPU.prototype = {
   },
 
   setPanning: function (pos) {
-    for (var i = 0; i < 5; i++) {
+    for (let i = 0; i < 5; i++) {
       this.panning[i] = pos[i];
     }
     this.updateStereoPos();
@@ -763,9 +763,9 @@ PAPU.prototype = {
   },
 
   initDACtables: function () {
-    var value, ival, i;
-    var max_sqr = 0;
-    var max_tnd = 0;
+    let value, ival, i;
+    let max_sqr = 0;
+    let max_tnd = 0;
 
     this.square_table = new Array(32 * 16);
     this.tnd_table = new Array(204 * 16);
@@ -858,7 +858,7 @@ PAPU.prototype = {
   },
 };
 
-var ChannelDM = function (papu) {
+const ChannelDM = function (papu) {
   this.papu = papu;
 
   this.MODE_NORMAL = 0;
@@ -1084,7 +1084,7 @@ ChannelDM.prototype = {
   },
 };
 
-var ChannelNoise = function (papu) {
+const ChannelNoise = function (papu) {
   this.papu = papu;
 
   this.isEnabled = null;
@@ -1240,7 +1240,7 @@ ChannelNoise.prototype = {
   },
 };
 
-var ChannelSquare = function (papu, square1) {
+const ChannelSquare = function (papu, square1) {
   this.papu = papu;
 
   // prettier-ignore
@@ -1396,7 +1396,7 @@ ChannelSquare.prototype = {
   },
 
   writeReg: function (address, value) {
-    var addrAdd = this.sqr1 ? 0 : 4;
+    let addrAdd = this.sqr1 ? 0 : 4;
     if (address === 0x4000 + addrAdd) {
       // Volume/Envelope decay:
       this.envDecayDisable = (value & 0x10) !== 0;
@@ -1482,7 +1482,7 @@ ChannelSquare.prototype = {
   },
 };
 
-var ChannelTriangle = function (papu) {
+const ChannelTriangle = function (papu) {
   this.papu = papu;
 
   this.isEnabled = null;

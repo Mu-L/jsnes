@@ -1,6 +1,6 @@
-var utils = require("./utils");
+const utils = require("./utils");
 
-var CPU = function (nes) {
+const CPU = function (nes) {
   this.nes = nes;
 
   // Keep Chrome happy
@@ -52,17 +52,17 @@ CPU.prototype = {
     // Main memory
     this.mem = new Array(0x10000);
 
-    for (var i = 0; i < 0x2000; i++) {
+    for (let i = 0; i < 0x2000; i++) {
       this.mem[i] = 0xff;
     }
-    for (var p = 0; p < 4; p++) {
-      var j = p * 0x800;
+    for (let p = 0; p < 4; p++) {
+      let j = p * 0x800;
       this.mem[j + 0x008] = 0xf7;
       this.mem[j + 0x009] = 0xef;
       this.mem[j + 0x00a] = 0xdf;
       this.mem[j + 0x00f] = 0xbf;
     }
-    for (var k = 0x2001; k < this.mem.length; k++) {
+    for (let k = 0x2001; k < this.mem.length; k++) {
       this.mem[k] = 0;
     }
 
@@ -126,12 +126,12 @@ CPU.prototype = {
 
   // Emulates a single CPU instruction, returns the number of cycles
   emulate: function () {
-    var temp;
-    var add;
+    let temp;
+    let add;
     // High byte of the base address before index addition, used by
     // SHA/SHX/SHY/SHS to compute the stored value as REG & (H+1).
     // Set in addressing mode cases 8 (ABSX), 9 (ABSY), 11 (POSTIDXIND).
-    var baseHigh = 0;
+    let baseHigh = 0;
 
     // Check interrupts:
     if (this.irqRequested) {
@@ -192,21 +192,21 @@ CPU.prototype = {
     // SHx instructions to detect bus hijacking mid-instruction.
     this._dmcFetchCycles = this._cyclesToNextDmcFetch();
 
-    var opcode = this.loadFromCartridge(this.REG_PC + 1);
+    let opcode = this.loadFromCartridge(this.REG_PC + 1);
     this.dataBus = opcode;
     this.instrBusCycles = 1; // opcode fetch = 1 bus cycle
-    var opinf = this.opdata[opcode];
-    var cycleCount = opinf >> 24;
-    var cycleAdd = 0;
+    let opinf = this.opdata[opcode];
+    let cycleCount = opinf >> 24;
+    let cycleAdd = 0;
 
     // Find address mode:
-    var addrMode = (opinf >> 8) & 0xff;
+    let addrMode = (opinf >> 8) & 0xff;
 
     // Increment PC by number of op bytes:
-    var opaddr = this.REG_PC;
+    let opaddr = this.REG_PC;
     this.REG_PC += (opinf >> 16) & 0xff;
 
-    var addr = 0;
+    let addr = 0;
     switch (addrMode) {
       case 0: {
         // Zero Page mode. Use the address given after the opcode,
@@ -251,14 +251,14 @@ CPU.prototype = {
         // The 6502 reads from the unindexed zero-page address while adding X.
         // This "dummy read" is a real bus cycle that can trigger I/O side effects.
         // See https://www.nesdev.org/wiki/CPU_addressing_modes
-        var zpBase6 = this.load(opaddr + 2);
+        let zpBase6 = this.load(opaddr + 2);
         this.load(zpBase6); // dummy read from unindexed zero-page address
         addr = (zpBase6 + this.REG_X) & 0xff;
         break;
       }
       case 7: {
         // Zero Page Indexed mode, Y as index. Same dummy read behavior as case 6.
-        var zpBase7 = this.load(opaddr + 2);
+        let zpBase7 = this.load(opaddr + 2);
         this.load(zpBase7); // dummy read from unindexed zero-page address
         addr = (zpBase7 + this.REG_Y) & 0xff;
         break;
@@ -295,16 +295,16 @@ CPU.prototype = {
         // Pre-indexed Indirect mode, (d,X). Read pointer from zero page,
         // add X, then read the 16-bit effective address. Wraps within zero page.
         // Dummy read from the unindexed pointer address while adding X.
-        var zpPtr10 = this.load(opaddr + 2);
+        let zpPtr10 = this.load(opaddr + 2);
         this.load(zpPtr10); // dummy read: 6502 reads from ptr before adding X
-        var zpAddr10 = (zpPtr10 + this.REG_X) & 0xff;
+        let zpAddr10 = (zpPtr10 + this.REG_X) & 0xff;
         addr = this.load(zpAddr10) | (this.load((zpAddr10 + 1) & 0xff) << 8);
         break;
       }
       case 11: {
         // Post-indexed Indirect mode, (d),Y. Read 16-bit base address from
         // zero page, then add Y. Page-crossing dummy read as in case 8.
-        var zpAddr = this.load(opaddr + 2);
+        let zpAddr = this.load(opaddr + 2);
         addr = this.load(zpAddr) | (this.load((zpAddr + 1) & 0xff) << 8);
         baseHigh = (addr >> 8) & 0xff;
         if ((addr & 0xff00) !== ((addr + this.REG_Y) & 0xff00)) {
@@ -1254,7 +1254,7 @@ CPU.prototype = {
         this.write(addr, temp);
 
         // Then subtract from the accumulator:
-        var isb_val = temp;
+        let isb_val = temp;
         temp = this.REG_ACC - isb_val - (1 - this.F_CARRY);
         this.F_SIGN = (temp >> 7) & 1;
         this.F_ZERO = temp & 0xff;
@@ -1315,7 +1315,7 @@ CPU.prototype = {
         this.write(addr, temp);
 
         // Then add to the accumulator
-        var rra_val = temp;
+        let rra_val = temp;
         temp = this.REG_ACC + rra_val + this.F_CARRY;
 
         if (
@@ -1421,10 +1421,10 @@ CPU.prototype = {
         // DMA hijacks the internal bus and the "& (H+1)" factor is dropped.
         // See _cyclesToNextDmcFetch() for the full explanation, and
         // AccuracyCoin.asm lines 4441-4460 for the test ROM's DMA sync.
-        var dmaDuringInstr =
+        let dmaDuringInstr =
           this._dmcFetchCycles > 0 &&
           this._dmcFetchCycles <= this.instrBusCycles;
-        var shaVal = dmaDuringInstr
+        let shaVal = dmaDuringInstr
           ? this.REG_ACC & this.REG_X
           : this.REG_ACC & this.REG_X & (((baseHigh + 1) & 0xff) | 0);
         if (cycleAdd === 1) {
@@ -1444,11 +1444,11 @@ CPU.prototype = {
         if (cycleAdd === 0) {
           this.load(addr); // forced dummy read (see case 71 comment)
         }
-        var dmaDuringInstr2 =
+        let dmaDuringInstr2 =
           this._dmcFetchCycles > 0 &&
           this._dmcFetchCycles <= this.instrBusCycles;
         this.REG_SP = 0x0100 | (this.REG_ACC & this.REG_X);
-        var shsVal = dmaDuringInstr2
+        let shsVal = dmaDuringInstr2
           ? this.REG_SP & 0xff
           : this.REG_SP & 0xff & ((baseHigh + 1) & 0xff);
         if (cycleAdd === 1) {
@@ -1468,10 +1468,10 @@ CPU.prototype = {
         if (cycleAdd === 0) {
           this.load(addr); // forced dummy read (see case 71 comment)
         }
-        var dmaDuringInstr3 =
+        let dmaDuringInstr3 =
           this._dmcFetchCycles > 0 &&
           this._dmcFetchCycles <= this.instrBusCycles;
-        var shyVal = dmaDuringInstr3
+        let shyVal = dmaDuringInstr3
           ? this.REG_Y
           : this.REG_Y & ((baseHigh + 1) & 0xff);
         if (cycleAdd === 1) {
@@ -1491,10 +1491,10 @@ CPU.prototype = {
         if (cycleAdd === 0) {
           this.load(addr); // forced dummy read (see case 71 comment)
         }
-        var dmaDuringInstr4 =
+        let dmaDuringInstr4 =
           this._dmcFetchCycles > 0 &&
           this._dmcFetchCycles <= this.instrBusCycles;
-        var shxVal = dmaDuringInstr4
+        let shxVal = dmaDuringInstr4
           ? this.REG_X
           : this.REG_X & ((baseHigh + 1) & 0xff);
         if (cycleAdd === 1) {
@@ -1564,7 +1564,7 @@ CPU.prototype = {
   // Used for opcode fetches, operand reads, indirect jumps, and interrupt
   // vectors — all places where Game Genie can intercept ROM reads.
   loadFromCartridge: function (addr) {
-    var value = this.nes.mmap.load(addr);
+    let value = this.nes.mmap.load(addr);
 
     if (this.nes.gameGenie.enabled && this.nes.gameGenie.patches.length > 0) {
       value = this.nes.gameGenie.applyCodes(addr, value);
@@ -1592,7 +1592,7 @@ CPU.prototype = {
       // not drive the external data bus. Return the status directly without
       // updating dataBus, so open bus reads after $4015 still see the
       // previous bus value. See https://www.nesdev.org/wiki/Open_bus_behavior
-      var apuStatus = this.loadFromCartridge(addr);
+      let apuStatus = this.loadFromCartridge(addr);
       this.instrBusCycles++;
       return apuStatus;
     } else {
@@ -1603,9 +1603,10 @@ CPU.prototype = {
   },
 
   load16bit: function (addr) {
+    let lo;
     if (addr < 0x1fff) {
       this.dataBus = this.mem[addr & 0x7ff];
-      var lo = this.dataBus;
+      lo = this.dataBus;
       this.dataBus = this.mem[(addr + 1) & 0x7ff];
       this.instrBusCycles += 2;
       return lo | (this.dataBus << 8);
@@ -1713,7 +1714,7 @@ CPU.prototype = {
     if (!this.nes.papu) {
       return 0x7fffffff;
     }
-    var dmc = this.nes.papu.dmc;
+    let dmc = this.nes.papu.dmc;
     if (!dmc || !dmc.isEnabled || dmc.dmaFrequency <= 0) {
       return 0x7fffffff;
     }
@@ -1730,8 +1731,8 @@ CPU.prototype = {
     // remaining CPU cycles to the next clockDmc call is ceil(shiftCounter/8).
     // After that, (dmaCounter - 1) more clockDmc calls must fire, each
     // taking dmaFrequency/8 CPU cycles.
-    var cyclesPerClock = dmc.dmaFrequency >> 3;
-    var cyclesToFirstClock = (dmc.shiftCounter + 7) >> 3;
+    let cyclesPerClock = dmc.dmaFrequency >> 3;
+    let cyclesToFirstClock = (dmc.shiftCounter + 7) >> 3;
     if (cyclesToFirstClock <= 0) cyclesToFirstClock = cyclesPerClock;
     return cyclesToFirstClock + (dmc.dmaCounter - 1) * cyclesPerClock;
   },
@@ -1742,8 +1743,8 @@ CPU.prototype = {
   //
   // See https://www.nesdev.org/wiki/Catch-up
   _ppuCatchUp: function () {
-    var ppu = this.nes.ppu;
-    var targetDots = this.instrBusCycles * 3;
+    let ppu = this.nes.ppu;
+    let targetDots = this.instrBusCycles * 3;
     while (this.ppuCatchupDots < targetDots) {
       if (
         ppu.curX === ppu.spr0HitX &&
@@ -1779,7 +1780,7 @@ CPU.prototype = {
   // fires frame counter steps (no DMC, channel timers, or audio sampling).
   // See https://www.nesdev.org/wiki/Catch-up
   _apuCatchUp: function () {
-    var targetCycles = this.instrBusCycles;
+    let targetCycles = this.instrBusCycles;
     if (targetCycles > this.apuCatchupCycles) {
       this.nes.papu.advanceFrameCounter(targetCycles - this.apuCatchupCycles);
       this.apuCatchupCycles = targetCycles;
@@ -1805,7 +1806,7 @@ CPU.prototype = {
     this.push(status);
 
     this.dataBus = this.loadFromCartridge(0xfffa);
-    var lo = this.dataBus;
+    let lo = this.dataBus;
     this.dataBus = this.loadFromCartridge(0xfffb);
     this.REG_PC_NEW = lo | (this.dataBus << 8);
     this.REG_PC_NEW--;
@@ -1813,7 +1814,7 @@ CPU.prototype = {
 
   doResetInterrupt: function () {
     this.dataBus = this.loadFromCartridge(0xfffc);
-    var lo = this.dataBus;
+    let lo = this.dataBus;
     this.dataBus = this.loadFromCartridge(0xfffd);
     this.REG_PC_NEW = lo | (this.dataBus << 8);
     this.REG_PC_NEW--;
@@ -1828,7 +1829,7 @@ CPU.prototype = {
     this.F_BRK_NEW = 0;
 
     this.dataBus = this.loadFromCartridge(0xfffe);
-    var lo = this.dataBus;
+    let lo = this.dataBus;
     this.dataBus = this.loadFromCartridge(0xffff);
     this.REG_PC_NEW = lo | (this.dataBus << 8);
     this.REG_PC_NEW--;
@@ -1897,11 +1898,11 @@ CPU.prototype = {
 };
 
 // Generates and provides an array of details about instructions
-var OpData = function () {
+const OpData = function () {
   this.opdata = new Array(256);
 
   // Set all to invalid instruction (to detect crashes):
-  for (var i = 0; i < 256; i++) this.opdata[i] = 0xff;
+  for (let i = 0; i < 256; i++) this.opdata[i] = 0xff;
 
   // Now fill in all valid opcodes:
 

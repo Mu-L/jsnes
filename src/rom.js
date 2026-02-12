@@ -1,12 +1,12 @@
-var Mappers = require("./mappers");
-var Tile = require("./tile");
+const Mappers = require("./mappers");
+const Tile = require("./tile");
 
-var ROM = function (nes) {
+const ROM = function (nes) {
   this.nes = nes;
 
   this.mapperName = new Array(92);
 
-  for (var i = 0; i < 92; i++) {
+  for (let i = 0; i < 92; i++) {
     this.mapperName[i] = "Unknown Mapper";
   }
   this.mapperName[0] = "Direct Access";
@@ -74,7 +74,7 @@ ROM.prototype = {
   valid: false,
 
   load: function (data) {
-    var i, j, v;
+    let i, j, v;
 
     if (data.indexOf("NES\x1a") === -1) {
       throw new Error("Not a valid NES ROM.");
@@ -94,7 +94,7 @@ ROM.prototype = {
         if (this.batteryRam)
             this.loadBatteryRam();*/
     // Check whether byte 8-15 are zero's:
-    var foundError = false;
+    let foundError = false;
     for (i = 8; i < 16; i++) {
       if (this.header[i] !== 0) {
         foundError = true;
@@ -106,7 +106,7 @@ ROM.prototype = {
     }
     // Load PRG-ROM banks:
     this.rom = new Array(this.romCount);
-    var offset = 16;
+    let offset = 16;
     for (i = 0; i < this.romCount; i++) {
       this.rom[i] = new Array(16384);
       for (j = 0; j < 16384; j++) {
@@ -140,8 +140,8 @@ ROM.prototype = {
     }
 
     // Convert CHR-ROM banks to tiles:
-    var tileIndex;
-    var leftOver;
+    let tileIndex;
+    let leftOver;
     for (v = 0; v < this.vromCount; v++) {
       for (i = 0; i < 4096; i++) {
         tileIndex = i >> 4;

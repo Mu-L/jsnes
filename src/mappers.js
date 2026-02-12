@@ -1,6 +1,6 @@
-var utils = require("./utils");
+const utils = require("./utils");
 
-var Mappers = {};
+let Mappers = {};
 
 Mappers[0] = function (nes) {
   this.nes = nes;
@@ -137,12 +137,12 @@ Mappers[0].prototype = {
             // See https://www.nesdev.org/wiki/Open_bus_behavior
             return (this.joy1Read() & 0x1f) | (this.nes.cpu.dataBus & 0xe0);
 
-          case 2:
+          case 2: {
             // 0x4017:
             // Joystick 2 + Strobe
             // https://wiki.nesdev.com/w/index.php/Zapper
             // Bits 0-4 from controller/zapper, bits 5-7 are open bus (data bus)
-            var w;
+            let w;
 
             if (
               this.zapperX !== null &&
@@ -160,6 +160,7 @@ Mappers[0].prototype = {
             return (
               ((this.joy2Read() | w) & 0x1f) | (this.nes.cpu.dataBus & 0xe0)
             );
+          }
         }
         break;
     }
@@ -169,12 +170,12 @@ Mappers[0].prototype = {
     // on the data bus instead of the open bus value. This is how the ROM's
     // DMA sync loops (LDA $4000; BNE) detect DMC activity.
     // See https://www.nesdev.org/wiki/APU_DMC#Memory_reader
-    var cpu = this.nes.cpu;
+    let cpu = this.nes.cpu;
     if (
       cpu._dmcFetchCycles > 0 &&
       cpu._dmcFetchCycles === cpu.instrBusCycles + 1
     ) {
-      var dmc = this.nes.papu.dmc;
+      let dmc = this.nes.papu.dmc;
       if (dmc && dmc.isEnabled) {
         return dmc.lastFetchedByte;
       }
@@ -268,7 +269,7 @@ Mappers[0].prototype = {
       return this.nes.controllers[1].state[0];
     }
 
-    var ret;
+    let ret;
     if (this.joy1StrobeState < 8) {
       ret = this.nes.controllers[1].state[this.joy1StrobeState];
     } else {
@@ -291,7 +292,7 @@ Mappers[0].prototype = {
       return this.nes.controllers[2].state[0];
     }
 
-    var ret;
+    let ret;
     if (this.joy2StrobeState < 8) {
       ret = this.nes.controllers[2].state[this.joy2StrobeState];
     } else {
@@ -355,7 +356,7 @@ Mappers[0].prototype = {
 
   loadBatteryRam: function () {
     if (this.nes.rom.batteryRam) {
-      var ram = this.nes.rom.batteryRam;
+      let ram = this.nes.rom.batteryRam;
       if (ram !== null && ram.length === 0x2000) {
         // Load Battery RAM into memory:
         utils.copyArrayElements(ram, 0, this.nes.cpu.mem, 0x6000, 0x2000);
@@ -366,7 +367,7 @@ Mappers[0].prototype = {
   loadRomBank: function (bank, address) {
     // Loads a ROM bank into the specified address.
     bank %= this.nes.rom.romCount;
-    //var data = this.nes.rom.rom[bank];
+    //let data = this.nes.rom.rom[bank];
     //cpuMem.write(address,data,data.length);
     utils.copyArrayElements(
       this.nes.rom.rom[bank],
@@ -391,7 +392,7 @@ Mappers[0].prototype = {
       4096,
     );
 
-    var vromTile = this.nes.rom.vromTile[bank % this.nes.rom.vromCount];
+    let vromTile = this.nes.rom.vromTile[bank % this.nes.rom.vromCount];
     utils.copyArrayElements(
       vromTile,
       0,
@@ -425,8 +426,8 @@ Mappers[0].prototype = {
     }
     this.nes.ppu.triggerRendering();
 
-    var bank4k = Math.floor(bank1k / 4) % this.nes.rom.vromCount;
-    var bankoffset = (bank1k % 4) * 1024;
+    let bank4k = Math.floor(bank1k / 4) % this.nes.rom.vromCount;
+    let bankoffset = (bank1k % 4) * 1024;
     utils.copyArrayElements(
       this.nes.rom.vrom[bank4k],
       bankoffset,
@@ -436,9 +437,9 @@ Mappers[0].prototype = {
     );
 
     // Update tiles:
-    var vromTile = this.nes.rom.vromTile[bank4k];
-    var baseIndex = address >> 4;
-    for (var i = 0; i < 64; i++) {
+    let vromTile = this.nes.rom.vromTile[bank4k];
+    let baseIndex = address >> 4;
+    for (let i = 0; i < 64; i++) {
       this.nes.ppu.ptTile[baseIndex + i] = vromTile[((bank1k % 4) << 6) + i];
     }
   },
@@ -449,8 +450,8 @@ Mappers[0].prototype = {
     }
     this.nes.ppu.triggerRendering();
 
-    var bank4k = Math.floor(bank2k / 2) % this.nes.rom.vromCount;
-    var bankoffset = (bank2k % 2) * 2048;
+    let bank4k = Math.floor(bank2k / 2) % this.nes.rom.vromCount;
+    let bankoffset = (bank2k % 2) * 2048;
     utils.copyArrayElements(
       this.nes.rom.vrom[bank4k],
       bankoffset,
@@ -460,16 +461,16 @@ Mappers[0].prototype = {
     );
 
     // Update tiles:
-    var vromTile = this.nes.rom.vromTile[bank4k];
-    var baseIndex = address >> 4;
-    for (var i = 0; i < 128; i++) {
+    let vromTile = this.nes.rom.vromTile[bank4k];
+    let baseIndex = address >> 4;
+    for (let i = 0; i < 128; i++) {
       this.nes.ppu.ptTile[baseIndex + i] = vromTile[((bank2k % 2) << 7) + i];
     }
   },
 
   load8kRomBank: function (bank8k, address) {
-    var bank16k = Math.floor(bank8k / 2) % this.nes.rom.romCount;
-    var offset = (bank8k % 2) * 8192;
+    let bank16k = Math.floor(bank8k / 2) % this.nes.rom.romCount;
+    let offset = (bank8k % 2) * 8192;
 
     //this.nes.cpu.mem.write(address,this.nes.rom.rom[bank16k],offset,8192);
     utils.copyArrayElements(
@@ -573,7 +574,7 @@ Mappers[1].prototype.write = function (address, value) {
 };
 
 Mappers[1].prototype.setReg = function (reg, value) {
-  var tmp;
+  let tmp;
 
   switch (reg) {
     case 0:
@@ -657,12 +658,12 @@ Mappers[1].prototype.setReg = function (reg, value) {
       }
       break;
 
-    default:
+    default: {
       // Select ROM bank:
       // -------------------------
       tmp = value & 0xf;
-      var bank;
-      var baseBank = 0;
+      let bank;
+      let baseBank = 0;
 
       if (this.nes.rom.romCount >= 32) {
         // 1024 kB cart
@@ -694,6 +695,7 @@ Mappers[1].prototype.setReg = function (reg, value) {
           this.loadRomBank(bank, 0x8000);
         }
       }
+    }
   }
 };
 
@@ -743,7 +745,7 @@ Mappers[1].prototype.switch32to16 = function () {
 };
 
 Mappers[1].prototype.toJSON = function () {
-  var s = Mappers[0].prototype.toJSON.apply(this);
+  let s = Mappers[0].prototype.toJSON.apply(this);
   s.mirroring = this.mirroring;
   s.oneScreenMirroring = this.oneScreenMirroring;
   s.prgSwitchingArea = this.prgSwitchingArea;
@@ -828,7 +830,7 @@ Mappers[3].prototype.write = function (address, value) {
     // Swap in the given ROM bank at 0x8000:
     // This is a VROM bank select command.
     // Swap in the given VROM bank at 0x0000:
-    var bank = (value % (this.nes.rom.vromCount / 2)) * 2;
+    let bank = (value % (this.nes.rom.vromCount / 2)) * 2;
     this.loadVromBank(bank, 0x0000);
     this.loadVromBank(bank + 1, 0x1000);
     this.load8kVromBank(value * 2, 0x0000);
@@ -867,16 +869,17 @@ Mappers[4].prototype.write = function (address, value) {
   }
 
   switch (address) {
-    case 0x8000:
+    case 0x8000: {
       // Command/Address Select register
       this.command = value & 7;
-      var tmp = (value >> 6) & 1;
+      const tmp = (value >> 6) & 1;
       if (tmp !== this.prgAddressSelect) {
         this.prgAddressChanged = true;
       }
       this.prgAddressSelect = tmp;
       this.chrAddressSelect = (value >> 7) & 1;
       break;
+    }
 
     case 0x8001:
       // Page number for command
@@ -1060,7 +1063,7 @@ Mappers[4].prototype.clockIrqCounter = function () {
 };
 
 Mappers[4].prototype.toJSON = function () {
-  var s = Mappers[0].prototype.toJSON.apply(this);
+  let s = Mappers[0].prototype.toJSON.apply(this);
   s.command = this.command;
   s.prgAddressSelect = this.prgAddressSelect;
   s.chrAddressSelect = this.chrAddressSelect;
@@ -1304,15 +1307,15 @@ Mappers[11].prototype.write = function (address, value) {
     return;
   } else {
     // Swap in the given PRG-ROM bank:
-    var prgbank1 = ((value & 0xf) * 2) % this.nes.rom.romCount;
-    var prgbank2 = ((value & 0xf) * 2 + 1) % this.nes.rom.romCount;
+    let prgbank1 = ((value & 0xf) * 2) % this.nes.rom.romCount;
+    let prgbank2 = ((value & 0xf) * 2 + 1) % this.nes.rom.romCount;
 
     this.loadRomBank(prgbank1, 0x8000);
     this.loadRomBank(prgbank2, 0xc000);
 
     if (this.nes.rom.vromCount > 0) {
       // Swap in the given VROM bank at 0x0000:
-      var bank = ((value >> 4) * 2) % this.nes.rom.vromCount;
+      let bank = ((value >> 4) * 2) % this.nes.rom.vromCount;
       this.loadVromBank(bank, 0x0000);
       this.loadVromBank(bank + 1, 0x1000);
     }

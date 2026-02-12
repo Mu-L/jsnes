@@ -1,10 +1,10 @@
-var assert = require("chai").assert;
-var fs = require("fs");
-var NES = require("../src/nes");
+const assert = require("chai").assert;
+const fs = require("fs");
+const NES = require("../src/nes");
 
 // Error code descriptions from nestest.txt, keyed by [byte, code].
 // Byte 0x02 errors:
-var ERRORS_02 = {
+const ERRORS_02 = {
   0x01: "BCS failed to branch",
   0x02: "BCS branched when it shouldn't have",
   0x03: "BCC branched when it shouldn't have",
@@ -262,7 +262,7 @@ var ERRORS_02 = {
 };
 
 // Byte 0x03 errors:
-var ERRORS_03 = {
+const ERRORS_03 = {
   0x01: "(indirect),y SBC failure",
   0x02: "(indirect),y SBC failure",
   0x03: "(indirect),y SBC failure",
@@ -520,7 +520,7 @@ var ERRORS_03 = {
 
 // Group test ranges for byte 0x02 into named test groups.
 // Each group covers a contiguous range of error codes.
-var TEST_GROUPS_02 = [
+const TEST_GROUPS_02 = [
   { name: "Branch tests", from: 0x01, to: 0x10 },
   { name: "Flag tests (PHP/PLP/PHA/PLA)", from: 0x11, to: 0x17 },
   { name: "Immediate instruction tests", from: 0x18, to: 0x3d },
@@ -535,7 +535,7 @@ var TEST_GROUPS_02 = [
   { name: "(indirect),y tests", from: 0xea, to: 0xfe },
 ];
 
-var TEST_GROUPS_03 = [
+const TEST_GROUPS_03 = [
   { name: "(indirect),y tests (continued)", from: 0x01, to: 0x06 },
   { name: "JMP indirect wrapping test", from: 0x07, to: 0x07 },
   { name: "Zeropage,x tests", from: 0x08, to: 0x31 },
@@ -564,7 +564,7 @@ var TEST_GROUPS_03 = [
  * A value of 0x00 means all tests in that page passed.
  */
 function runNestest(romData) {
-  var nes = new NES({
+  let nes = new NES({
     onFrame: function () {},
     onAudioSample: function () {},
     emulateSound: false,
@@ -582,10 +582,10 @@ function runNestest(romData) {
   // Step individual CPU instructions (no PPU needed — the automation
   // path doesn't wait for VBlank). Run until the ROM hits an invalid
   // opcode (crashes) or we reach a safety limit.
-  var maxInstructions = 100000;
-  var count = 0;
+  let maxInstructions = 100000;
+  let count = 0;
 
-  var crashMessage = null;
+  let crashMessage = null;
   try {
     while (count < maxInstructions) {
       nes.cpu.emulate();
@@ -598,7 +598,7 @@ function runNestest(romData) {
   // A crash in the open bus region ($4018-$5FFF) is expected when open bus
   // is properly emulated — the nestest automation mode executes from open
   // bus addresses, and the data bus values lead to a KIL opcode.
-  var crashInOpenBus =
+  let crashInOpenBus =
     crashMessage !== null &&
     /address \$[45][0-9a-f]{3}$/.test(crashMessage);
 
@@ -613,8 +613,8 @@ function runNestest(romData) {
 
 function describeError(byte, code, errorTable) {
   if (code === 0) return null;
-  var desc = errorTable[code];
-  var hex = "0x" + code.toString(16).toUpperCase().padStart(2, "0");
+  let desc = errorTable[code];
+  let hex = "0x" + code.toString(16).toUpperCase().padStart(2, "0");
   if (desc) {
     return "byte " + byte + " error " + hex + ": " + desc;
   }
@@ -624,7 +624,7 @@ function describeError(byte, code, errorTable) {
 describe("nestest (CPU test ROM)", function () {
   this.timeout(30000);
 
-  var results;
+  let results;
 
   before(function (done) {
     fs.readFile("roms/nestest/nestest.nes", function (err, data) {
@@ -649,7 +649,7 @@ describe("nestest (CPU test ROM)", function () {
   // Generate individual test cases for each group in byte 0x02
   TEST_GROUPS_02.forEach(function (group) {
     it(group.name, function () {
-      var code = results.result02;
+      let code = results.result02;
       if (code >= group.from && code <= group.to) {
         assert.fail(describeError("0x02", code, ERRORS_02));
       }
@@ -662,7 +662,7 @@ describe("nestest (CPU test ROM)", function () {
   // codes and run last, so a RRA failure would overwrite earlier results.
   TEST_GROUPS_03.forEach(function (group) {
     it(group.name, function () {
-      var code = results.result03;
+      let code = results.result03;
       if (code >= group.from && code <= group.to) {
         assert.fail(describeError("0x03", code, ERRORS_03));
       }
@@ -670,7 +670,7 @@ describe("nestest (CPU test ROM)", function () {
   });
 
   it("all official opcode tests pass (byte 0x02 = 0x00)", function () {
-    var code = results.result02;
+    let code = results.result02;
     if (code !== 0) {
       assert.fail(
         describeError("0x02", code, ERRORS_02) ||
@@ -680,7 +680,7 @@ describe("nestest (CPU test ROM)", function () {
   });
 
   it("all unofficial opcode tests pass (byte 0x03 = 0x00)", function () {
-    var code = results.result03;
+    let code = results.result03;
     if (code !== 0) {
       assert.fail(
         describeError("0x03", code, ERRORS_03) ||
@@ -691,9 +691,9 @@ describe("nestest (CPU test ROM)", function () {
 
   after(function () {
     // Print summary
-    var hex02 =
+    let hex02 =
       "0x" + results.result02.toString(16).toUpperCase().padStart(2, "0");
-    var hex03 =
+    let hex03 =
       "0x" + results.result03.toString(16).toUpperCase().padStart(2, "0");
     console.log("");
     console.log(

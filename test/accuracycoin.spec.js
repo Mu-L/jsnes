@@ -1,7 +1,7 @@
-var assert = require("chai").assert;
-var fs = require("fs");
-var NES = require("../src/nes");
-var Controller = require("../src/controller");
+const assert = require("chai").assert;
+const fs = require("fs");
+const NES = require("../src/nes");
+const Controller = require("../src/controller");
 
 // AccuracyCoin test result memory addresses and test names, organized by page.
 //
@@ -18,7 +18,7 @@ var Controller = require("../src/controller");
 // The test harness uses (value & 3) === 1 to detect any pass code.
 //
 // "DRAW" tests (result in page $03xx) are informational only and skipped by "run all".
-var TEST_PAGES = [
+const TEST_PAGES = [
   {
     page: "CPU Behavior",
     tests: [
@@ -256,7 +256,7 @@ var TEST_PAGES = [
 ];
 
 // Tests known to fail — skip these until the emulator is fixed.
-var KNOWN_FAILURES = {
+const KNOWN_FAILURES = {
   // CPU interrupts: not cycle-accurate enough
   0x0461: "Interrupt flag latency not emulated",
   0x0462: "NMI overlap BRK not emulated",
@@ -321,7 +321,7 @@ var KNOWN_FAILURES = {
 };
 
 // Flatten all tests for easy iteration
-var ALL_TESTS = [];
+const ALL_TESTS = [];
 TEST_PAGES.forEach(function (page) {
   page.tests.forEach(function (test) {
     ALL_TESTS.push({
@@ -340,7 +340,7 @@ TEST_PAGES.forEach(function (page) {
  * Returns a map of result address -> result value for every test.
  */
 function runAccuracyCoin(romData) {
-  var nes = new NES({
+  let nes = new NES({
     onFrame: function () {},
     onAudioSample: function () {},
     emulateSound: false,
@@ -351,7 +351,7 @@ function runAccuracyCoin(romData) {
   // Run frames to let the ROM initialize and display the menu.
   // The cursor starts at $FF (top of page, highlighting the page index).
   // Wait until the NMI is enabled and the menu is ready (Debug_EC reaches $0C).
-  for (var i = 0; i < 60; i++) {
+  for (let i = 0; i < 60; i++) {
     nes.frame();
   }
 
@@ -359,20 +359,20 @@ function runAccuracyCoin(romData) {
   // The NMI routine reads controller_New (newly-pressed buttons).
   // We need the button to transition from up->down between NMI reads.
   nes.buttonDown(1, Controller.BUTTON_START);
-  for (var i = 0; i < 5; i++) {
+  for (let i = 0; i < 5; i++) {
     nes.frame();
   }
   nes.buttonUp(1, Controller.BUTTON_START);
 
   // Run frames until RunningAllTests ($35) goes back to 0,
   // or we hit a safety limit.
-  var maxFrames = 30000;
-  var framesRun = 65; // already ran 60 + 5
-  var crashed = false;
-  var crashMessage = null;
+  let maxFrames = 30000;
+  let framesRun = 65; // already ran 60 + 5
+  let crashed = false;
+  let crashMessage = null;
 
   try {
-    for (var f = 0; f < maxFrames; f++) {
+    for (let f = 0; f < maxFrames; f++) {
       nes.frame();
       framesRun++;
 
@@ -388,7 +388,7 @@ function runAccuracyCoin(romData) {
   }
 
   // Collect results from all test addresses
-  var results = {};
+  let results = {};
   ALL_TESTS.forEach(function (test) {
     results[test.addr] = nes.cpu.mem[test.addr];
   });
@@ -422,7 +422,7 @@ function formatResult(value) {
 describe("AccuracyCoin", function () {
   this.timeout(600000); // 10 minutes — running 134 tests takes a while
 
-  var run;
+  let run;
 
   before(function (done) {
     fs.readFile("roms/AccuracyCoin/AccuracyCoin.nes", function (err, data) {
@@ -435,18 +435,18 @@ describe("AccuracyCoin", function () {
   it("should not crash before completing all tests", function () {
     if (run.crashed) {
       // Figure out which test was running when the crash happened
-      var lastRun = "unknown";
+      let lastRun = "unknown";
       ALL_TESTS.forEach(function (test) {
-        var result = run.results[test.addr];
+        let result = run.results[test.addr];
         if (result !== 0x00 && result !== 0xff) {
           lastRun = test.page + " / " + test.name;
         }
       });
       // Find first NOT RUN test after the last run one
-      var firstNotRun = "unknown";
-      var foundLast = false;
-      for (var i = 0; i < ALL_TESTS.length; i++) {
-        var result = run.results[ALL_TESTS[i].addr];
+      let firstNotRun = "unknown";
+      let foundLast = false;
+      for (let i = 0; i < ALL_TESTS.length; i++) {
+        let result = run.results[ALL_TESTS[i].addr];
         if (result !== 0x00 && result !== 0xff) {
           foundLast = true;
         } else if (foundLast && result === 0x00) {
@@ -474,13 +474,13 @@ describe("AccuracyCoin", function () {
 
     describe(page.page, function () {
       page.tests.forEach(function (test) {
-        var knownFailure = KNOWN_FAILURES[test.addr];
+        let knownFailure = KNOWN_FAILURES[test.addr];
         if (knownFailure) {
           it.skip(test.name + " — " + knownFailure, function () {});
           return;
         }
         it(test.name, function () {
-          var result = run.results[test.addr];
+          let result = run.results[test.addr];
           if (result === 0x00) {
             this.skip(); // not run (likely due to earlier crash)
           }
@@ -502,13 +502,13 @@ describe("AccuracyCoin", function () {
   after(function () {
     if (!run) return;
     // Print summary
-    var pass = 0;
-    var fail = 0;
-    var notRun = 0;
-    var failures = [];
+    let pass = 0;
+    let fail = 0;
+    let notRun = 0;
+    let failures = [];
 
     ALL_TESTS.forEach(function (test) {
-      var result = run.results[test.addr];
+      let result = run.results[test.addr];
       if (isPass(result)) {
         pass++;
       } else if (result === 0x00 || result === 0xff) {

@@ -1,7 +1,7 @@
-var Tile = require("./tile");
-var utils = require("./utils");
+const Tile = require("./tile");
+const utils = require("./utils");
 
-var PPU = function (nes) {
+const PPU = function (nes) {
   this.nes = nes;
 
   // Keep Chrome happy
@@ -94,7 +94,7 @@ PPU.prototype = {
   STATUS_VBLANK: 7,
 
   reset: function () {
-    var i;
+    let i;
 
     // Memory
     this.vramMem = new Array(0x8000);
@@ -235,7 +235,7 @@ PPU.prototype = {
     if (this.vramMirrorTable === null) {
       this.vramMirrorTable = new Array(0x8000);
     }
-    for (var i = 0; i < 0x8000; i++) {
+    for (let i = 0; i < 0x8000; i++) {
       this.vramMirrorTable[i] = i;
     }
 
@@ -303,7 +303,7 @@ PPU.prototype = {
   // Assumes the regions don't overlap.
   // The 'to' region is the region that is physically in memory.
   defineMirrorRegion: function (fromStart, toStart, size) {
-    for (var i = 0; i < size; i++) {
+    for (let i = 0; i < size; i++) {
       this.vramMirrorTable[fromStart + i] = toStart + i;
     }
   },
@@ -440,7 +440,7 @@ PPU.prototype = {
 
   startFrame: function () {
     // Set background color:
-    var bgColor = 0;
+    let bgColor = 0;
 
     if (this.f_dispType === 0) {
       // Color display.
@@ -477,20 +477,20 @@ PPU.prototype = {
       }
     }
 
-    var buffer = this.buffer;
-    var i;
+    let buffer = this.buffer;
+    let i;
     for (i = 0; i < 256 * 240; i++) {
       buffer[i] = bgColor;
     }
-    var pixrendered = this.pixrendered;
+    let pixrendered = this.pixrendered;
     for (i = 0; i < pixrendered.length; i++) {
       pixrendered[i] = 65;
     }
   },
 
   endFrame: function () {
-    var i, x, y;
-    var buffer = this.buffer;
+    let i, x, y;
+    let buffer = this.buffer;
 
     // Draw spr#0 hit coordinates:
     if (this.showSpr0Hit) {
@@ -594,7 +594,7 @@ PPU.prototype = {
   },
 
   setStatusFlag: function (flag, value) {
-    var n = 1 << flag;
+    let n = 1 << flag;
     this.nes.cpu.mem[0x2002] =
       (this.nes.cpu.mem[0x2002] & (255 - n)) | (value ? n : 0);
   },
@@ -602,7 +602,7 @@ PPU.prototype = {
   // CPU Register $2002:
   // Read the Status Register.
   readStatusRegister: function () {
-    var tmp = this.nes.cpu.mem[0x2002];
+    let tmp = this.nes.cpu.mem[0x2002];
 
     // Reset scroll & VRAM Address toggle:
     this.firstWrite = true;
@@ -701,7 +701,7 @@ PPU.prototype = {
   // CPU Register $2007(R):
   // Read from PPU memory. The address should be set first.
   vramLoad: function () {
-    var tmp;
+    let tmp;
 
     this.cntsToAddress();
     this.regsToAddress();
@@ -738,7 +738,7 @@ PPU.prototype = {
     // Backdrop mirrors: $3F10/$3F14/$3F18/$3F1C → $3F00/$3F04/$3F08/$3F0C.
     // Values are 6-bit; upper 2 bits come from the PPU open bus latch.
     // See https://www.nesdev.org/wiki/PPU_palettes
-    var palIdx = this.vramAddress & 0x1f;
+    let palIdx = this.vramAddress & 0x1f;
     if ((palIdx & 0x13) === 0x10) {
       palIdx &= 0x0f; // backdrop mirror
     }
@@ -789,11 +789,11 @@ PPU.prototype = {
   // The destination starts at the current OAMADDR and wraps within OAM.
   // See https://www.nesdev.org/wiki/PPU_registers#OAMDMA
   sramDMA: function (value) {
-    var baseAddress = value * 0x100;
-    var data;
-    for (var i = 0; i < 256; i++) {
+    let baseAddress = value * 0x100;
+    let data;
+    for (let i = 0; i < 256; i++) {
       data = this.nes.cpu.mem[baseAddress + i];
-      var oamAddr = (this.sramAddress + i) & 0xff;
+      let oamAddr = (this.sramAddress + i) & 0xff;
       this.spriteMem[oamAddr] = data;
       this.spriteRamWriteUpdate(oamAddr, data);
     }
@@ -803,7 +803,7 @@ PPU.prototype = {
 
   // Updates the scroll registers from a new VRAM address.
   regsFromAddress: function () {
-    var address = (this.vramTmpAddress >> 8) & 0xff;
+    let address = (this.vramTmpAddress >> 8) & 0xff;
     this.regFV = (address >> 4) & 7;
     this.regV = (address >> 3) & 1;
     this.regH = (address >> 2) & 1;
@@ -816,7 +816,7 @@ PPU.prototype = {
 
   // Updates the scroll registers from a new VRAM address.
   cntsFromAddress: function () {
-    var address = (this.vramAddress >> 8) & 0xff;
+    let address = (this.vramAddress >> 8) & 0xff;
     this.cntFV = (address >> 4) & 3;
     this.cntV = (address >> 3) & 1;
     this.cntH = (address >> 2) & 1;
@@ -828,31 +828,31 @@ PPU.prototype = {
   },
 
   regsToAddress: function () {
-    var b1 = (this.regFV & 7) << 4;
+    let b1 = (this.regFV & 7) << 4;
     b1 |= (this.regV & 1) << 3;
     b1 |= (this.regH & 1) << 2;
     b1 |= (this.regVT >> 3) & 3;
 
-    var b2 = (this.regVT & 7) << 5;
+    let b2 = (this.regVT & 7) << 5;
     b2 |= this.regHT & 31;
 
     this.vramTmpAddress = ((b1 << 8) | b2) & 0x7fff;
   },
 
   cntsToAddress: function () {
-    var b1 = (this.cntFV & 7) << 4;
+    let b1 = (this.cntFV & 7) << 4;
     b1 |= (this.cntV & 1) << 3;
     b1 |= (this.cntH & 1) << 2;
     b1 |= (this.cntVT >> 3) & 3;
 
-    var b2 = (this.cntVT & 7) << 5;
+    let b2 = (this.cntVT & 7) << 5;
     b2 |= this.cntHT & 31;
 
     this.vramAddress = ((b1 << 8) | b2) & 0x7fff;
   },
 
   incTileCounter: function (count) {
-    for (var i = count; i !== 0; i--) {
+    for (let i = count; i !== 0; i--) {
       this.cntHT++;
       if (this.cntHT === 32) {
         this.cntHT = 0;
@@ -928,15 +928,15 @@ PPU.prototype = {
     }
 
     if (this.f_bgVisibility === 1) {
-      var si = startScan << 8;
-      var ei = (startScan + scanCount) << 8;
+      let si = startScan << 8;
+      let ei = (startScan + scanCount) << 8;
       if (ei > 0xf000) {
         ei = 0xf000;
       }
-      var buffer = this.buffer;
-      var bgbuffer = this.bgbuffer;
-      var pixrendered = this.pixrendered;
-      for (var destIndex = si; destIndex < ei; destIndex++) {
+      let buffer = this.buffer;
+      let bgbuffer = this.bgbuffer;
+      let pixrendered = this.pixrendered;
+      for (let destIndex = si; destIndex < ei; destIndex++) {
         if (pixrendered[destIndex] > 0xff) {
           buffer[destIndex] = bgbuffer[destIndex];
         }
@@ -951,8 +951,8 @@ PPU.prototype = {
   },
 
   renderBgScanline: function (bgbuffer, scan) {
-    var baseTile = this.regS === 0 ? 0 : 256;
-    var destIndex = (scan << 8) - this.regFH;
+    let baseTile = this.regS === 0 ? 0 : 256;
+    let destIndex = (scan << 8) - this.regFH;
 
     this.curNt = this.ntable1[this.cntV + this.cntV + this.cntH];
 
@@ -961,18 +961,18 @@ PPU.prototype = {
     this.curNt = this.ntable1[this.cntV + this.cntV + this.cntH];
 
     if (scan < 240 && scan - this.cntFV >= 0) {
-      var tscanoffset = this.cntFV << 3;
-      var scantile = this.scantile;
-      var attrib = this.attrib;
-      var ptTile = this.ptTile;
-      var nameTable = this.nameTable;
-      var imgPalette = this.imgPalette;
-      var pixrendered = this.pixrendered;
-      var targetBuffer = bgbuffer ? this.bgbuffer : this.buffer;
+      let tscanoffset = this.cntFV << 3;
+      let scantile = this.scantile;
+      let attrib = this.attrib;
+      let ptTile = this.ptTile;
+      let nameTable = this.nameTable;
+      let imgPalette = this.imgPalette;
+      let pixrendered = this.pixrendered;
+      let targetBuffer = bgbuffer ? this.bgbuffer : this.buffer;
 
-      var t, tpix, att, col;
+      let t, tpix, att, col;
 
-      for (var tile = 0; tile < 32; tile++) {
+      for (let tile = 0; tile < 32; tile++) {
         if (scan >= 0) {
           // Fetch tile & attrib data:
           if (this.validTileData) {
@@ -1000,8 +1000,8 @@ PPU.prototype = {
           }
 
           // Render tile scanline:
-          var sx = 0;
-          var x = (tile << 3) - this.regFH;
+          let sx = 0;
+          let x = (tile << 3) - this.regFH;
 
           if (x > -8) {
             if (x < 0) {
@@ -1063,7 +1063,7 @@ PPU.prototype = {
 
   renderSpritesPartially: function (startscan, scancount, bgPri) {
     if (this.f_spVisibility === 1) {
-      for (var i = 0; i < 64; i++) {
+      for (let i = 0; i < 64; i++) {
         if (
           this.bgPriority[i] === bgPri &&
           this.sprX[i] >= 0 &&
@@ -1121,13 +1121,13 @@ PPU.prototype = {
             }
           } else {
             // 8x16 sprites
-            var top = this.sprTile[i];
+            let top = this.sprTile[i];
             if ((top & 1) !== 0) {
               top = this.sprTile[i] - 1 + 256;
             }
 
-            var srcy1 = 0;
-            var srcy2 = 8;
+            let srcy1 = 0;
+            let srcy2 = 8;
 
             if (this.sprY[i] < startscan) {
               srcy1 = startscan - this.sprY[i] - 1;
@@ -1189,10 +1189,10 @@ PPU.prototype = {
     this.spr0HitX = -1;
     this.spr0HitY = -1;
 
-    var toffset;
-    var tIndexAdd = this.f_spPatternTable === 0 ? 0 : 256;
-    var x, y, t, i;
-    var bufferIndex;
+    let toffset;
+    let tIndexAdd = this.f_spPatternTable === 0 ? 0 : 256;
+    let x, y, t, i;
+    let bufferIndex;
 
     x = this.sprX[0];
     y = this.sprY[0] + 1;
@@ -1368,7 +1368,7 @@ PPU.prototype = {
   // Reads data from $3f00 to $f20
   // into the two buffered palettes.
   updatePalettes: function () {
-    var i;
+    let i;
 
     for (i = 0; i < 16; i++) {
       if (this.f_dispType === 0) {
@@ -1398,8 +1398,8 @@ PPU.prototype = {
   // table buffers with this new byte.
   // In vNES, there is a version of this with 4 arguments which isn't used.
   patternWrite: function (address, value) {
-    var tileIndex = Math.floor(address / 16);
-    var leftOver = address % 16;
+    let tileIndex = Math.floor(address / 16);
+    let leftOver = address % 16;
     if (leftOver < 8) {
       this.ptTile[tileIndex].setScanline(
         leftOver,
@@ -1435,7 +1435,7 @@ PPU.prototype = {
   // Updates the internally buffered sprite
   // data with this new byte of info.
   spriteRamWriteUpdate: function (address, value) {
-    var tIndex = Math.floor(address / 4);
+    let tIndex = Math.floor(address / 4);
 
     if (tIndex === 0) {
       //updateSpr0Hit();
@@ -1543,8 +1543,8 @@ PPU.prototype = {
   ],
 
   toJSON: function () {
-    var i;
-    var state = utils.toJSON(this);
+    let i;
+    let state = utils.toJSON(this);
 
     state.nameTable = [];
     for (i = 0; i < this.nameTable.length; i++) {
@@ -1560,7 +1560,7 @@ PPU.prototype = {
   },
 
   fromJSON: function (state) {
-    var i;
+    let i;
 
     utils.fromJSON(this, state);
 
@@ -1579,14 +1579,14 @@ PPU.prototype = {
   },
 };
 
-var NameTable = function (width, height, name) {
+const NameTable = function (width, height, name) {
   this.width = width;
   this.height = height;
   this.name = name;
 
   this.tile = new Array(width * height);
   this.attrib = new Array(width * height);
-  for (var i = 0; i < width * height; i++) {
+  for (let i = 0; i < width * height; i++) {
     this.tile[i] = 0;
     this.attrib[i] = 0;
   }
@@ -1602,17 +1602,17 @@ NameTable.prototype = {
   },
 
   writeAttrib: function (index, value) {
-    var basex = (index % 8) * 4;
-    var basey = Math.floor(index / 8) * 4;
-    var add;
-    var tx, ty;
-    var attindex;
+    let basex = (index % 8) * 4;
+    let basey = Math.floor(index / 8) * 4;
+    let add;
+    let tx, ty;
+    let attindex;
 
-    for (var sqy = 0; sqy < 2; sqy++) {
-      for (var sqx = 0; sqx < 2; sqx++) {
+    for (let sqy = 0; sqy < 2; sqy++) {
+      for (let sqx = 0; sqx < 2; sqx++) {
         add = (value >> (2 * (sqy * 2 + sqx))) & 3;
-        for (var y = 0; y < 2; y++) {
-          for (var x = 0; x < 2; x++) {
+        for (let y = 0; y < 2; y++) {
+          for (let x = 0; x < 2; x++) {
             tx = basex + sqx * 2 + x;
             ty = basey + sqy * 2 + y;
             attindex = ty * this.width + tx;
@@ -1636,7 +1636,7 @@ NameTable.prototype = {
   },
 };
 
-var PaletteTable = function () {
+const PaletteTable = function () {
   this.curTable = new Array(64);
   this.emphTable = new Array(8);
   this.currentEmph = -1;
@@ -1662,10 +1662,10 @@ PaletteTable.prototype = {
   },
 
   makeTables: function () {
-    var r, g, b, col, i, rFactor, gFactor, bFactor;
+    let r, g, b, col, i, rFactor, gFactor, bFactor;
 
     // Calculate a table for each possible emphasis setting:
-    for (var emph = 0; emph < 8; emph++) {
+    for (let emph = 0; emph < 8; emph++) {
       // Determine color component factors:
       rFactor = 1.0;
       gFactor = 1.0;
@@ -1700,7 +1700,7 @@ PaletteTable.prototype = {
   setEmphasis: function (emph) {
     if (emph !== this.currentEmph) {
       this.currentEmph = emph;
-      for (var i = 0; i < 64; i++) {
+      for (let i = 0; i < 64; i++) {
         this.curTable[i] = this.emphTable[emph][i];
       }
     }

@@ -1,21 +1,21 @@
-var SCREEN_WIDTH = 256;
-var SCREEN_HEIGHT = 240;
-var FRAMEBUFFER_SIZE = SCREEN_WIDTH*SCREEN_HEIGHT;
+const SCREEN_WIDTH = 256;
+const SCREEN_HEIGHT = 240;
+const FRAMEBUFFER_SIZE = SCREEN_WIDTH*SCREEN_HEIGHT;
 
-var canvas_ctx, image;
-var framebuffer_u8, framebuffer_u32;
+let canvas_ctx, image;
+let framebuffer_u8, framebuffer_u32;
 
-var AUDIO_BUFFERING = 512;
-var SAMPLE_COUNT = 4*1024;
-var SAMPLE_MASK = SAMPLE_COUNT - 1;
-var audio_samples_L = new Float32Array(SAMPLE_COUNT);
-var audio_samples_R = new Float32Array(SAMPLE_COUNT);
-var audio_write_cursor = 0, audio_read_cursor = 0;
-var audio_started = false;
+const AUDIO_BUFFERING = 512;
+const SAMPLE_COUNT = 4*1024;
+const SAMPLE_MASK = SAMPLE_COUNT - 1;
+let audio_samples_L = new Float32Array(SAMPLE_COUNT);
+let audio_samples_R = new Float32Array(SAMPLE_COUNT);
+let audio_write_cursor = 0, audio_read_cursor = 0;
+let audio_started = false;
 
-var nes = new jsnes.NES({
+let nes = new jsnes.NES({
 	onFrame: function(framebuffer_24){
-		for(var i = 0; i < FRAMEBUFFER_SIZE; i++) framebuffer_u32[i] = 0xFF000000 | framebuffer_24[i];
+		for(let i = 0; i < FRAMEBUFFER_SIZE; i++) framebuffer_u32[i] = 0xFF000000 | framebuffer_24[i];
 	},
 	onAudioSample: function(l, r){
 		audio_samples_L[audio_write_cursor] = l;
@@ -39,16 +39,16 @@ function audio_remain(){
 }
 
 function audio_callback(event){
-	var dst = event.outputBuffer;
-	var len = dst.length;
+	let dst = event.outputBuffer;
+	let len = dst.length;
 	
 	// Attempt to avoid buffer underruns.
 	if(audio_remain() < AUDIO_BUFFERING) nes.frame();
 	
-	var dst_l = dst.getChannelData(0);
-	var dst_r = dst.getChannelData(1);
-	for(var i = 0; i < len; i++){
-		var src_idx = (audio_read_cursor + i) & SAMPLE_MASK;
+	let dst_l = dst.getChannelData(0);
+	let dst_r = dst.getChannelData(1);
+	for(let i = 0; i < len; i++){
+		let src_idx = (audio_read_cursor + i) & SAMPLE_MASK;
 		dst_l[i] = audio_samples_L[src_idx];
 		dst_r[i] = audio_samples_R[src_idx];
 	}
@@ -58,7 +58,7 @@ function audio_callback(event){
 
 function keyboard(callback, event){
     event.preventDefault();
-	var player = 1;
+	let player = 1;
 	switch(event.keyCode){
 		case 38: // UP
 			callback(player, jsnes.Controller.BUTTON_UP); break;
@@ -82,9 +82,9 @@ function keyboard(callback, event){
 	}
 }
 
-var audio_ctx;
+let audio_ctx;
 function nes_init(canvas_id){
-	var canvas = document.getElementById(canvas_id);
+	let canvas = document.getElementById(canvas_id);
 	canvas_ctx = canvas.getContext("2d");
 	image = canvas_ctx.getImageData(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	
@@ -92,17 +92,17 @@ function nes_init(canvas_id){
 	canvas_ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	
 	// Allocate framebuffer array.
-	var buffer = new ArrayBuffer(image.data.length);
+	let buffer = new ArrayBuffer(image.data.length);
 	framebuffer_u8 = new Uint8ClampedArray(buffer);
 	framebuffer_u32 = new Uint32Array(buffer);
 	
 	// Setup audio.
 	audio_ctx = new window.AudioContext();
-	var script_processor = audio_ctx.createScriptProcessor(AUDIO_BUFFERING, 0, 2);
+	let script_processor = audio_ctx.createScriptProcessor(AUDIO_BUFFERING, 0, 2);
 	script_processor.onaudioprocess = audio_callback;
 	script_processor.connect(audio_ctx.destination);
 	if (audio_ctx.state === 'suspended') {
-		var audioButton = document.getElementById('audio');
+		let audioButton = document.getElementById('audio');
 		audioButton.style.display = 'block';
 	} else {
 		audio_started = true;
@@ -122,7 +122,7 @@ function nes_load_data(canvas_id, rom_data){
 function nes_load_url(canvas_id, path){
 	nes_init(canvas_id);
 	
-	var req = new XMLHttpRequest();
+	let req = new XMLHttpRequest();
 	req.open("GET", path);
 	req.overrideMimeType("text/plain; charset=x-user-defined");
 	req.onerror = () => console.log(`Error loading ${path}: ${req.statusText}`);
@@ -144,7 +144,7 @@ document.addEventListener('keydown', (event) => {keyboard(nes.buttonDown, event)
 document.addEventListener('keyup', (event) => {keyboard(nes.buttonUp, event)});
 
 document.addEventListener('DOMContentLoaded', (event) => {
-    var audioButton = document.getElementById('audio');
+    let audioButton = document.getElementById('audio');
     audioButton.addEventListener('click', () => {
         audio_ctx.resume().then(() => {
 			audio_started = true;

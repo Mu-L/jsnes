@@ -1,10 +1,10 @@
-var assert = require("chai").assert;
-var GameGenie = require("../src/gamegenie");
-var NES = require("../src/nes");
-var fs = require("fs");
+const assert = require("chai").assert;
+const GameGenie = require("../src/gamegenie");
+const NES = require("../src/nes");
+const fs = require("fs");
 
 describe("GameGenie", function () {
-  var gg = null;
+  let gg = null;
 
   beforeEach(function () {
     gg = new GameGenie();
@@ -13,7 +13,7 @@ describe("GameGenie", function () {
   describe("decode", function () {
     it("decodes a 6-letter code (no compare key)", function () {
       // SXIOPO = infinite lives in SMB
-      var result = gg.decode("SXIOPO");
+      let result = gg.decode("SXIOPO");
       assert.equal(result.value, 0xad);
       assert.equal(result.addr, 0x11d9);
       assert.isUndefined(result.key);
@@ -22,7 +22,7 @@ describe("GameGenie", function () {
 
     it("decodes an 8-letter code (with compare key)", function () {
       // AAEAULPA = 8-letter Game Genie code
-      var result = gg.decode("AAEAULPA");
+      let result = gg.decode("AAEAULPA");
       assert.equal(result.value, 0x00);
       assert.equal(result.addr, 0x0b03);
       assert.equal(result.key, 0x01);
@@ -30,20 +30,20 @@ describe("GameGenie", function () {
     });
 
     it("is case-insensitive", function () {
-      var upper = gg.decode("SXIOPO");
-      var lower = gg.decode("sxiopo");
+      let upper = gg.decode("SXIOPO");
+      let lower = gg.decode("sxiopo");
       assert.deepEqual(upper, lower);
     });
 
     it("decodes a hex code", function () {
-      var result = gg.decode("11d9:ad");
+      let result = gg.decode("11d9:ad");
       assert.equal(result.value, 0xad);
       assert.equal(result.addr, 0x11d9);
       assert.isUndefined(result.key);
     });
 
     it("decodes a hex code with compare key", function () {
-      var result = gg.decode("075a:01?00");
+      let result = gg.decode("075a:01?00");
       assert.equal(result.value, 0x01);
       assert.equal(result.addr, 0x075a);
       assert.equal(result.key, 0x00);
@@ -51,7 +51,7 @@ describe("GameGenie", function () {
     });
 
     it("decodes a hex code with ? but no key value", function () {
-      var result = gg.decode("1234:ab?");
+      let result = gg.decode("1234:ab?");
       assert.equal(result.addr, 0x1234);
       assert.equal(result.value, 0xab);
       assert.isTrue(result.wantskey);
@@ -61,26 +61,26 @@ describe("GameGenie", function () {
 
   describe("encode", function () {
     it("encodes a 6-letter code", function () {
-      var code = gg.encode(0x11d9, 0xad);
+      let code = gg.encode(0x11d9, 0xad);
       assert.equal(code, "SXIOPO");
     });
 
     it("encodes an 8-letter code with compare key", function () {
-      var code = gg.encode(0x0b03, 0x00, 0x01);
+      let code = gg.encode(0x0b03, 0x00, 0x01);
       assert.equal(code, "AAEAULPA");
     });
 
     it("round-trips a 6-letter code through decode/encode", function () {
-      var original = "SXIOPO";
-      var decoded = gg.decode(original);
-      var encoded = gg.encode(decoded.addr, decoded.value, decoded.key);
+      let original = "SXIOPO";
+      let decoded = gg.decode(original);
+      let encoded = gg.encode(decoded.addr, decoded.value, decoded.key);
       assert.equal(encoded, original);
     });
 
     it("round-trips an 8-letter code through decode/encode", function () {
-      var original = "AAEAULPA";
-      var decoded = gg.decode(original);
-      var encoded = gg.encode(
+      let original = "AAEAULPA";
+      let decoded = gg.decode(original);
+      let encoded = gg.encode(
         decoded.addr,
         decoded.value,
         decoded.key,
@@ -92,16 +92,16 @@ describe("GameGenie", function () {
 
   describe("encodeHex / decodeHex", function () {
     it("round-trips a hex code without key", function () {
-      var hex = gg.encodeHex(0x05d9, 0xad);
-      var decoded = gg.decodeHex(hex);
+      let hex = gg.encodeHex(0x05d9, 0xad);
+      let decoded = gg.decodeHex(hex);
       assert.equal(decoded.addr, 0x05d9);
       assert.equal(decoded.value, 0xad);
       assert.isUndefined(decoded.key);
     });
 
     it("round-trips a hex code with key", function () {
-      var hex = gg.encodeHex(0x075a, 0x01, 0x00);
-      var decoded = gg.decodeHex(hex);
+      let hex = gg.encodeHex(0x075a, 0x01, 0x00);
+      let decoded = gg.decodeHex(hex);
       assert.equal(decoded.addr, 0x075a);
       assert.equal(decoded.value, 0x01);
       assert.equal(decoded.key, 0x00);
@@ -190,30 +190,30 @@ describe("GameGenie", function () {
 
   describe("NES integration", function () {
     it("NES has a gameGenie instance", function () {
-      var nes = new NES();
+      let nes = new NES();
       assert.isObject(nes.gameGenie);
       assert.isTrue(nes.gameGenie.enabled);
       assert.isArray(nes.gameGenie.patches);
     });
 
     it("Game Genie patches affect CPU ROM reads", function (done) {
-      var nes = new NES({ onFrame: function () {} });
+      let nes = new NES({ onFrame: function () {} });
       fs.readFile("roms/croom/croom.nes", function (err, data) {
         if (err) return done(err);
         nes.loadROM(data.toString("binary"));
 
         // Read a byte from ROM without any patches
-        var addr = 0xc000;
-        var original = nes.cpu.load(addr);
+        let addr = 0xc000;
+        let original = nes.cpu.load(addr);
 
         // Apply a patch that changes that byte
         nes.gameGenie.addPatch(addr & 0x7fff, 0x42);
-        var patched = nes.cpu.load(addr);
+        let patched = nes.cpu.load(addr);
         assert.equal(patched, 0x42);
 
         // Disable Game Genie and verify original value returns
         nes.gameGenie.setEnabled(false);
-        var unpatched = nes.cpu.load(addr);
+        let unpatched = nes.cpu.load(addr);
         assert.equal(unpatched, original);
 
         done();
@@ -221,13 +221,13 @@ describe("GameGenie", function () {
     });
 
     it("Game Genie patches work with compare keys on real ROM data", function (done) {
-      var nes = new NES({ onFrame: function () {} });
+      let nes = new NES({ onFrame: function () {} });
       fs.readFile("roms/croom/croom.nes", function (err, data) {
         if (err) return done(err);
         nes.loadROM(data.toString("binary"));
 
-        var addr = 0xc000;
-        var original = nes.cpu.load(addr);
+        let addr = 0xc000;
+        let original = nes.cpu.load(addr);
 
         // Patch with wrong compare key — should NOT substitute
         nes.gameGenie.addPatch(addr & 0x7fff, 0x42, original ^ 0xff);
@@ -243,8 +243,8 @@ describe("GameGenie", function () {
     });
 
     it("emulator still runs frames with Game Genie patches active", function (done) {
-      var frameCount = 0;
-      var nes = new NES({
+      let frameCount = 0;
+      let nes = new NES({
         onFrame: function () {
           frameCount++;
         },
@@ -257,7 +257,7 @@ describe("GameGenie", function () {
         nes.gameGenie.addPatch(0x7fff, 0x00);
 
         // Run a few frames — should not crash
-        for (var i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i++) {
           nes.frame();
         }
         assert.equal(frameCount, 3);
