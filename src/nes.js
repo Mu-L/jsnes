@@ -55,9 +55,9 @@ class NES {
       this.mmap.reset();
     }
 
-    this.cpu.reset();
-    this.ppu.reset();
-    this.papu.reset();
+    this.cpu = new CPU(this);
+    this.ppu = new PPU(this);
+    this.papu = new PAPU(this);
 
     this.lastFpsTime = null;
     this.fpsFrameCount = 0;

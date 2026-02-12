@@ -23,9 +23,6 @@ class PAPU {
     this.noise = new ChannelNoise(this);
     this.dmc = new ChannelDM(this);
 
-    this.sampleRate = 44100;
-
-    this.frameIrqEnabled = false;
     this.startedPlaying = false;
     this.recordOutput = false;
     this.triValue = 0;
@@ -62,7 +59,28 @@ class PAPU {
       }
     }
 
-    this.reset();
+    this.sampleRate = this.nes.opts.sampleRate;
+    this.sampleTimerMax = Math.floor(
+      (1024.0 * CPU_FREQ_NTSC * this.nes.opts.preferredFrameRate) /
+        (this.sampleRate * 60.0),
+    );
+    this.sampleTimer = 0;
+    this.updateChannelEnable(0);
+    this.frameCycleCounter = 0;
+    this.frameStep = 0;
+    this.countSequence = 0;
+    this.sampleCount = 0;
+    this.frameIrqEnabled = false;
+    this.frameIrqActive = false;
+    this.accCount = 0;
+    this.smpSquare1 = 0;
+    this.smpSquare2 = 0;
+    this.smpTriangle = 0;
+    this.smpDmc = 0;
+    this.channelEnableValue = 0xff;
+    this.extraCycles = 0;
+    this.maxSample = -500000;
+    this.minSample = 500000;
 
     this.JSON_PROPERTIES = [
       "channelEnableValue",
@@ -103,49 +121,6 @@ class PAPU {
       "minSample",
       "panning",
     ];
-  }
-
-  reset() {
-    this.sampleRate = this.nes.opts.sampleRate;
-    this.sampleTimerMax = Math.floor(
-      (1024.0 * CPU_FREQ_NTSC * this.nes.opts.preferredFrameRate) /
-        (this.sampleRate * 60.0),
-    );
-
-    this.sampleTimer = 0;
-
-    this.updateChannelEnable(0);
-    // Frame counter state: tracks CPU cycle position within the current
-    // 4-step or 5-step sequence and which step fires next.
-    this.frameCycleCounter = 0;
-    this.frameStep = 0;
-    this.countSequence = 0;
-    this.sampleCount = 0;
-    this.frameIrqEnabled = false;
-    this.frameIrqActive = false;
-
-    this.square1.reset();
-    this.square2.reset();
-    this.triangle.reset();
-    this.noise.reset();
-    this.dmc.reset();
-
-    this.accCount = 0;
-    this.smpSquare1 = 0;
-    this.smpSquare2 = 0;
-    this.smpTriangle = 0;
-    this.smpDmc = 0;
-
-    this.channelEnableValue = 0xff;
-    this.startedPlaying = false;
-    this.prevSampleL = 0;
-    this.prevSampleR = 0;
-    this.smpAccumL = 0;
-    this.smpAccumR = 0;
-
-    this.extraCycles = 0;
-    this.maxSample = -500000;
-    this.minSample = 500000;
   }
 
   // eslint-disable-next-line no-unused-vars
@@ -828,9 +803,24 @@ class ChannelDM {
     this.MODE_LOOP = 1;
     this.MODE_IRQ = 2;
 
+    this.isEnabled = false;
+    this.hasSample = false;
     this.irqGenerated = false;
-
-    this.reset();
+    this.playMode = this.MODE_NORMAL;
+    this.dmaFrequency = 0;
+    this.dmaCounter = 0;
+    this.deltaCounter = 0;
+    this.playStartAddress = 0;
+    this.playAddress = 0;
+    this.playLength = 0;
+    this.playLengthCounter = 0;
+    this.sample = 0;
+    this.dacLsb = 0;
+    this.shiftCounter = 0;
+    this.reg4012 = 0;
+    this.reg4013 = 0;
+    this.data = 0;
+    this.lastFetchedByte = 0;
 
     this.JSON_PROPERTIES = [
       "MODE_NORMAL",
@@ -1000,27 +990,6 @@ class ChannelDM {
     return this.irqGenerated ? 1 : 0;
   }
 
-  reset() {
-    this.isEnabled = false;
-    this.hasSample = false;
-    this.irqGenerated = false;
-    this.playMode = this.MODE_NORMAL;
-    this.dmaFrequency = 0;
-    this.dmaCounter = 0;
-    this.deltaCounter = 0;
-    this.playStartAddress = 0;
-    this.playAddress = 0;
-    this.playLength = 0;
-    this.playLengthCounter = 0;
-    this.sample = 0;
-    this.dacLsb = 0;
-    this.shiftCounter = 0;
-    this.reg4012 = 0;
-    this.reg4013 = 0;
-    this.data = 0;
-    this.lastFetchedByte = 0;
-  }
-
   toJSON() {
     return utils.toJSON(this);
   }
@@ -1034,10 +1003,26 @@ class ChannelNoise {
   constructor(papu) {
     this.papu = papu;
 
+    this.progTimerCount = 0;
+    this.progTimerMax = 0;
+    this.isEnabled = false;
+    this.lengthCounter = 0;
+    this.lengthCounterEnable = false;
+    this.envDecayDisable = false;
+    this.envDecayLoopEnable = false;
+    this.envReset = false;
+    this.shiftNow = false;
+    this.envDecayRate = 0;
+    this.envDecayCounter = 0;
+    this.envVolume = 0;
+    this.masterVolume = 0;
+    this.shiftReg = 1;
+    this.randomBit = 0;
+    this.randomMode = 0;
+    this.sampleValue = 0;
+    this.tmp = 0;
     this.accValue = 0;
     this.accCount = 1;
-
-    this.reset();
 
     this.JSON_PROPERTIES = [
       "isEnabled",
@@ -1061,27 +1046,6 @@ class ChannelNoise {
       "accCount",
       "tmp",
     ];
-  }
-
-  reset() {
-    this.progTimerCount = 0;
-    this.progTimerMax = 0;
-    this.isEnabled = false;
-    this.lengthCounter = 0;
-    this.lengthCounterEnable = false;
-    this.envDecayDisable = false;
-    this.envDecayLoopEnable = false;
-    this.envReset = false;
-    this.shiftNow = false;
-    this.envDecayRate = 0;
-    this.envDecayCounter = 0;
-    this.envVolume = 0;
-    this.masterVolume = 0;
-    this.shiftReg = 1;
-    this.randomBit = 0;
-    this.randomMode = 0;
-    this.sampleValue = 0;
-    this.tmp = 0;
   }
 
   clockLengthCounter() {
@@ -1189,7 +1153,30 @@ class ChannelSquare {
 
     this.sqr1 = square1;
 
-    this.reset();
+    this.progTimerCount = 0;
+    this.progTimerMax = 0;
+    this.lengthCounter = 0;
+    this.squareCounter = 0;
+    this.sweepCounter = 0;
+    this.sweepCounterMax = 0;
+    this.sweepMode = 0;
+    this.sweepShiftAmount = 0;
+    this.envDecayRate = 0;
+    this.envDecayCounter = 0;
+    this.envVolume = 0;
+    this.masterVolume = 0;
+    this.dutyMode = 0;
+    this.vol = 0;
+    this.isEnabled = false;
+    this.lengthCounterEnable = false;
+    this.sweepActive = false;
+    this.sweepCarry = false;
+    this.envDecayDisable = false;
+    this.envDecayLoopEnable = false;
+    this.envReset = false;
+    this.updateSweepPeriod = false;
+    this.sweepResult = 0;
+    this.sampleValue = 0;
 
     this.JSON_PROPERTIES = [
       "isEnabled",
@@ -1217,34 +1204,6 @@ class ChannelSquare {
       "sampleValue",
       "vol",
     ];
-  }
-
-  reset() {
-    this.progTimerCount = 0;
-    this.progTimerMax = 0;
-    this.lengthCounter = 0;
-    this.squareCounter = 0;
-    this.sweepCounter = 0;
-    this.sweepCounterMax = 0;
-    this.sweepMode = 0;
-    this.sweepShiftAmount = 0;
-    this.envDecayRate = 0;
-    this.envDecayCounter = 0;
-    this.envVolume = 0;
-    this.masterVolume = 0;
-    this.dutyMode = 0;
-    this.vol = 0;
-
-    this.isEnabled = false;
-    this.lengthCounterEnable = false;
-    this.sweepActive = false;
-    this.sweepCarry = false;
-    this.envDecayDisable = false;
-    this.envDecayLoopEnable = false;
-    this.envReset = false;
-    this.updateSweepPeriod = false;
-    this.sweepResult = 0;
-    this.sampleValue = 0;
   }
 
   clockLengthCounter() {
@@ -1393,7 +1352,19 @@ class ChannelTriangle {
   constructor(papu) {
     this.papu = papu;
 
-    this.reset();
+    this.progTimerCount = 0;
+    this.progTimerMax = 0;
+    this.triangleCounter = 0;
+    this.isEnabled = false;
+    this.sampleCondition = false;
+    this.lengthCounter = 0;
+    this.lengthCounterEnable = false;
+    this.linearCounter = 0;
+    this.lcLoadValue = 0;
+    this.lcHalt = true;
+    this.lcControl = false;
+    this.tmp = 0;
+    this.sampleValue = 0xf;
 
     this.JSON_PROPERTIES = [
       "isEnabled",
@@ -1410,22 +1381,6 @@ class ChannelTriangle {
       "sampleValue",
       "tmp",
     ];
-  }
-
-  reset() {
-    this.progTimerCount = 0;
-    this.progTimerMax = 0;
-    this.triangleCounter = 0;
-    this.isEnabled = false;
-    this.sampleCondition = false;
-    this.lengthCounter = 0;
-    this.lengthCounterEnable = false;
-    this.linearCounter = 0;
-    this.lcLoadValue = 0;
-    this.lcHalt = true;
-    this.lcControl = false;
-    this.tmp = 0;
-    this.sampleValue = 0xf;
   }
 
   clockLengthCounter() {

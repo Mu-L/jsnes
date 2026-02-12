@@ -85,10 +85,6 @@ class PPU {
       "scanlineAlreadyRendered",
     ];
 
-    this.reset();
-  }
-
-  reset() {
     let i;
 
     // Memory

@@ -8,10 +8,7 @@ class CPU {
 
   constructor(nes) {
     this.nes = nes;
-    this.reset();
-  }
 
-  reset() {
     // Main memory
     this.mem = new Array(0x10000);
 

@@ -69,7 +69,6 @@ describe("CPU", function () {
         mmap = new MMAP(mem);
         nes = new NES(mmap);
         cpu = new CPU(nes);
-        cpu.reset();
         cpu.mem = mem;
         perform_check_cycles = true;
         cpu.REG_SP = 0xfd;
