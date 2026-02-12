@@ -67,7 +67,7 @@ class ROM {
     if (data.indexOf("NES\x1a") === -1) {
       throw new Error("Not a valid NES ROM.");
     }
-    this.header = new Array(16);
+    this.header = new Uint8Array(16);
     for (i = 0; i < 16; i++) {
       this.header[i] = data.charCodeAt(i) & 0xff;
     }
@@ -96,7 +96,7 @@ class ROM {
     this.rom = new Array(this.romCount);
     let offset = 16;
     for (i = 0; i < this.romCount; i++) {
-      this.rom[i] = new Array(16384);
+      this.rom[i] = new Uint8Array(16384);
       for (j = 0; j < 16384; j++) {
         if (offset + j >= data.length) {
           break;
@@ -108,7 +108,7 @@ class ROM {
     // Load CHR-ROM banks:
     this.vrom = new Array(this.vromCount);
     for (i = 0; i < this.vromCount; i++) {
-      this.vrom[i] = new Array(4096);
+      this.vrom[i] = new Uint8Array(4096);
       for (j = 0; j < 4096; j++) {
         if (offset + j >= data.length) {
           break;

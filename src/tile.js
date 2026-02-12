@@ -1,10 +1,10 @@
 class Tile {
   constructor() {
-    // Tile data:
-    this.pix = new Array(64);
+    // Tile data: color indices 0–3
+    this.pix = new Uint8Array(64);
 
     this.initialized = false;
-    this.opaque = new Array(8);
+    this.opaque = new Uint8Array(8);
   }
 
   setBuffer(scanline) {
@@ -173,14 +173,14 @@ class Tile {
 
   toJSON() {
     return {
-      opaque: this.opaque,
-      pix: this.pix,
+      opaque: Array.from(this.opaque),
+      pix: Array.from(this.pix),
     };
   }
 
   fromJSON(s) {
-    this.opaque = s.opaque;
-    this.pix = s.pix;
+    this.opaque.set(s.opaque);
+    this.pix.set(s.pix);
   }
 }
 

@@ -9,21 +9,16 @@ class CPU {
   constructor(nes) {
     this.nes = nes;
 
-    // Main memory
-    this.mem = new Array(0x10000);
+    // Main memory (Uint8Array is zero-initialized, so only need to set non-zero regions)
+    this.mem = new Uint8Array(0x10000);
 
-    for (let i = 0; i < 0x2000; i++) {
-      this.mem[i] = 0xff;
-    }
+    this.mem.fill(0xff, 0, 0x2000);
     for (let p = 0; p < 4; p++) {
       let j = p * 0x800;
       this.mem[j + 0x008] = 0xf7;
       this.mem[j + 0x009] = 0xef;
       this.mem[j + 0x00a] = 0xdf;
       this.mem[j + 0x00f] = 0xbf;
-    }
-    for (let k = 0x2001; k < this.mem.length; k++) {
-      this.mem[k] = 0;
     }
 
     // CPU Registers:

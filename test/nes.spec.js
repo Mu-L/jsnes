@@ -16,7 +16,7 @@ describe("NES", function() {
       nes.loadROM(data.toString("binary"));
       nes.frame();
       assert(onFrame.calledOnce);
-      assert.isArray(onFrame.args[0][0]);
+      assert.instanceOf(onFrame.args[0][0], Uint32Array);
       assert.lengthOf(onFrame.args[0][0], 256 * 240);
       done();
     });

@@ -89,15 +89,9 @@ class PPU {
 
     let i;
 
-    // Memory
-    this.vramMem = new Array(0x8000);
-    this.spriteMem = new Array(0x100);
-    for (i = 0; i < this.vramMem.length; i++) {
-      this.vramMem[i] = 0;
-    }
-    for (i = 0; i < this.spriteMem.length; i++) {
-      this.spriteMem[i] = 0;
-    }
+    // Memory (Uint8Array is zero-initialized)
+    this.vramMem = new Uint8Array(0x8000);
+    this.spriteMem = new Uint8Array(0x100);
 
     // VRAM I/O:
     this.vramAddress = null;
@@ -160,10 +154,10 @@ class PPU {
     this.curNt = null;
 
     // Variables used when rendering:
-    this.attrib = new Array(32);
-    this.buffer = new Array(256 * 240);
-    this.bgbuffer = new Array(256 * 240);
-    this.pixrendered = new Array(256 * 240);
+    this.attrib = new Uint8Array(32);
+    this.buffer = new Uint32Array(256 * 240);
+    this.bgbuffer = new Uint32Array(256 * 240);
+    this.pixrendered = new Uint32Array(256 * 240);
 
     this.validTileData = null;
 
@@ -175,20 +169,20 @@ class PPU {
     this.curX = 0;
 
     // Sprite data:
-    this.sprX = new Array(64); // X coordinate
-    this.sprY = new Array(64); // Y coordinate
-    this.sprTile = new Array(64); // Tile Index (into pattern table)
-    this.sprCol = new Array(64); // Upper two bits of color
-    this.vertFlip = new Array(64); // Vertical Flip
-    this.horiFlip = new Array(64); // Horizontal Flip
-    this.bgPriority = new Array(64); // Background priority
+    this.sprX = new Uint8Array(64); // X coordinate
+    this.sprY = new Uint8Array(64); // Y coordinate
+    this.sprTile = new Uint8Array(64); // Tile Index (into pattern table)
+    this.sprCol = new Uint8Array(64); // Upper two bits of color
+    this.vertFlip = new Uint8Array(64); // Vertical Flip (0/1)
+    this.horiFlip = new Uint8Array(64); // Horizontal Flip (0/1)
+    this.bgPriority = new Uint8Array(64); // Background priority (0/1)
     this.spr0HitX = 0; // Sprite #0 hit X coordinate
     this.spr0HitY = 0; // Sprite #0 hit Y coordinate
     this.hitSpr0 = false;
 
     // Palette data:
-    this.sprPalette = new Array(16);
-    this.imgPalette = new Array(16);
+    this.sprPalette = new Uint32Array(16);
+    this.imgPalette = new Uint32Array(16);
 
     // Create pattern table tile buffers:
     this.ptTile = new Array(512);
@@ -206,7 +200,7 @@ class PPU {
     }
 
     // Initialize mirroring lookup table:
-    this.vramMirrorTable = new Array(0x8000);
+    this.vramMirrorTable = new Uint16Array(0x8000);
     for (i = 0; i < 0x8000; i++) {
       this.vramMirrorTable[i] = i;
     }
@@ -230,7 +224,7 @@ class PPU {
 
     // Remove mirroring:
     if (this.vramMirrorTable === null) {
-      this.vramMirrorTable = new Array(0x8000);
+      this.vramMirrorTable = new Uint16Array(0x8000);
     }
     for (let i = 0; i < 0x8000; i++) {
       this.vramMirrorTable[i] = i;

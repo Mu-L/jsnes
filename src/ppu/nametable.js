@@ -4,12 +4,8 @@ class NameTable {
     this.height = height;
     this.name = name;
 
-    this.tile = new Array(width * height);
-    this.attrib = new Array(width * height);
-    for (let i = 0; i < width * height; i++) {
-      this.tile[i] = 0;
-      this.attrib[i] = 0;
-    }
+    this.tile = new Uint8Array(width * height);
+    this.attrib = new Uint8Array(width * height);
   }
 
   getTileIndex(x, y) {
@@ -44,14 +40,14 @@ class NameTable {
 
   toJSON() {
     return {
-      tile: this.tile,
-      attrib: this.attrib,
+      tile: Array.from(this.tile),
+      attrib: Array.from(this.attrib),
     };
   }
 
   fromJSON(s) {
-    this.tile = s.tile;
-    this.attrib = s.attrib;
+    this.tile.set(s.tile);
+    this.attrib.set(s.attrib);
   }
 }
 
