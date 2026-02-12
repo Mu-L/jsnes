@@ -167,7 +167,7 @@ class ROM {
     if (this.mapperType >= 0 && this.mapperType < this.mapperName.length) {
       return this.mapperName[this.mapperType];
     }
-    return "Unknown Mapper, " + this.mapperType;
+    return `Unknown Mapper, ${this.mapperType}`;
   }
 
   mapperSupported() {
@@ -179,11 +179,7 @@ class ROM {
       return new Mappers[this.mapperType](this.nes);
     } else {
       throw new Error(
-        "This ROM uses a mapper not supported by JSNES: " +
-          this.getMapperName() +
-          "(" +
-          this.mapperType +
-          ")",
+        `This ROM uses a mapper not supported by JSNES: ${this.getMapperName()}(${this.mapperType})`,
       );
     }
   }

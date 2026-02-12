@@ -126,7 +126,7 @@ class PPU {
     this.currentMirroring = -1;
     this.nameTable = new Array(4);
     for (i = 0; i < 4; i++) {
-      this.nameTable[i] = new NameTable(32, 32, "Nt" + i);
+      this.nameTable[i] = new NameTable(32, 32, `Nt${i}`);
     }
 
     // Initialize mirroring lookup table:
@@ -825,7 +825,7 @@ class PPU {
       if (address < this.vramMirrorTable.length) {
         this.writeMem(this.vramMirrorTable[address], value);
       } else {
-        throw new Error("Invalid VRAM address: " + address.toString(16));
+        throw new Error(`Invalid VRAM address: ${address.toString(16)}`);
       }
     }
   }

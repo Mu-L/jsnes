@@ -1510,7 +1510,7 @@ class CPU {
         // *******
 
         throw new Error(
-          "Game crashed, invalid opcode at address $" + opaddr.toString(16),
+          `Game crashed, invalid opcode at address $${opaddr.toString(16)}`,
         );
       }
     } // end of switch
