@@ -8,43 +8,6 @@ class CPU {
 
   constructor(nes) {
     this.nes = nes;
-
-    // Keep Chrome happy
-    this.mem = null;
-    this.REG_ACC = null;
-    this.REG_X = null;
-    this.REG_Y = null;
-    this.REG_SP = null;
-    this.REG_PC = null;
-    this.REG_PC_NEW = null;
-    this.REG_STATUS = null;
-    this.F_CARRY = null;
-    this.F_DECIMAL = null;
-    this.F_INTERRUPT = null;
-    this.F_INTERRUPT_NEW = null;
-    this.F_OVERFLOW = null;
-    this.F_SIGN = null;
-    this.F_ZERO = null;
-    this.F_NOTUSED = null;
-    this.F_NOTUSED_NEW = null;
-    this.F_BRK = null;
-    this.F_BRK_NEW = null;
-    this.opdata = null;
-    this.cyclesToHalt = null;
-    this.crash = null;
-    this.irqRequested = null;
-    this.irqType = null;
-    // Tracks the last value on the CPU data bus. When reading from unmapped
-    // addresses ("open bus"), the NES returns this value. Updated on every
-    // read, write, push, pull, and interrupt vector fetch.
-    // See https://www.nesdev.org/wiki/Open_bus_behavior
-    this.dataBus = null;
-
-    // PPU catch-up: mid-instruction synchronization (see _ppuCatchUp)
-    this.instrBusCycles = null;
-    this.ppuCatchupDots = null;
-    this.ppuFrameEnded = null;
-
     this.reset();
   }
 
@@ -108,7 +71,10 @@ class CPU {
     this.irqRequested = false;
     this.irqType = null;
 
-    // Data bus (open bus):
+    // Tracks the last value on the CPU data bus. When reading from unmapped
+    // addresses ("open bus"), the NES returns this value. Updated on every
+    // read, write, push, pull, and interrupt vector fetch.
+    // See https://www.nesdev.org/wiki/Open_bus_behavior
     this.dataBus = 0;
 
     // PPU catch-up state: On real hardware, the CPU and PPU advance in

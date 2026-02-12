@@ -15,19 +15,6 @@ class ROM {
 
   constructor(nes) {
     this.nes = nes;
-
-    this.header = null;
-    this.rom = null;
-    this.vrom = null;
-    this.vromTile = null;
-
-    this.romCount = null;
-    this.vromCount = null;
-    this.mirroring = null;
-    this.batteryRam = null;
-    this.trainer = null;
-    this.fourScreen = null;
-    this.mapperType = null;
     this.valid = false;
 
     this.mapperName = new Array(92);

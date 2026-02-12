@@ -23,36 +23,12 @@ class PAPU {
     this.noise = new ChannelNoise(this);
     this.dmc = new ChannelDM(this);
 
-    this.channelEnableValue = null;
-
     this.sampleRate = 44100;
 
-    this.lengthLookup = null;
-    this.dmcFreqLookup = null;
-    this.noiseWavelengthLookup = null;
-    this.square_table = null;
-    this.tnd_table = null;
-
     this.frameIrqEnabled = false;
-    this.frameIrqActive = null;
     this.startedPlaying = false;
     this.recordOutput = false;
-
-    // Frame counter state: tracks CPU cycle position within the current
-    // 4-step or 5-step sequence and which step fires next.
-    this.frameCycleCounter = null;
-    this.frameStep = null;
-    this.countSequence = null;
-    this.sampleTimer = null;
-    this.sampleTimerMax = null;
-    this.sampleCount = null;
     this.triValue = 0;
-
-    this.smpSquare1 = null;
-    this.smpSquare2 = null;
-    this.smpTriangle = null;
-    this.smpDmc = null;
-    this.accCount = null;
 
     // DC removal vars:
     this.prevSampleL = 0;
@@ -66,23 +42,6 @@ class PAPU {
 
     // Master volume:
     this.masterVolume = 256;
-
-    // Stereo positioning:
-    this.stereoPosLSquare1 = null;
-    this.stereoPosLSquare2 = null;
-    this.stereoPosLTriangle = null;
-    this.stereoPosLNoise = null;
-    this.stereoPosLDMC = null;
-    this.stereoPosRSquare1 = null;
-    this.stereoPosRSquare2 = null;
-    this.stereoPosRTriangle = null;
-    this.stereoPosRNoise = null;
-    this.stereoPosRDMC = null;
-
-    this.extraCycles = null;
-
-    this.maxSample = null;
-    this.minSample = null;
 
     // Panning:
     this.panning = [80, 170, 100, 150, 128];
@@ -156,6 +115,8 @@ class PAPU {
     this.sampleTimer = 0;
 
     this.updateChannelEnable(0);
+    // Frame counter state: tracks CPU cycle position within the current
+    // 4-step or 5-step sequence and which step fires next.
     this.frameCycleCounter = 0;
     this.frameStep = 0;
     this.countSequence = 0;
@@ -182,6 +143,7 @@ class PAPU {
     this.smpAccumL = 0;
     this.smpAccumR = 0;
 
+    this.extraCycles = 0;
     this.maxSample = -500000;
     this.minSample = 500000;
   }
@@ -866,24 +828,7 @@ class ChannelDM {
     this.MODE_LOOP = 1;
     this.MODE_IRQ = 2;
 
-    this.isEnabled = null;
-    this.hasSample = null;
     this.irqGenerated = false;
-
-    this.playMode = null;
-    this.dmaFrequency = null;
-    this.dmaCounter = null;
-    this.deltaCounter = null;
-    this.playStartAddress = null;
-    this.playAddress = null;
-    this.playLength = null;
-    this.playLengthCounter = null;
-    this.shiftCounter = null;
-    this.reg4012 = null;
-    this.reg4013 = null;
-    this.sample = null;
-    this.dacLsb = null;
-    this.data = null;
 
     this.reset();
 
@@ -1057,6 +1002,7 @@ class ChannelDM {
 
   reset() {
     this.isEnabled = false;
+    this.hasSample = false;
     this.irqGenerated = false;
     this.playMode = this.MODE_NORMAL;
     this.dmaFrequency = 0;
@@ -1088,27 +1034,8 @@ class ChannelNoise {
   constructor(papu) {
     this.papu = papu;
 
-    this.isEnabled = null;
-    this.envDecayDisable = null;
-    this.envDecayLoopEnable = null;
-    this.lengthCounterEnable = null;
-    this.envReset = null;
-    this.shiftNow = null;
-
-    this.lengthCounter = null;
-    this.progTimerCount = null;
-    this.progTimerMax = null;
-    this.envDecayRate = null;
-    this.envDecayCounter = null;
-    this.envVolume = null;
-    this.masterVolume = null;
-    this.shiftReg = 1 << 14;
-    this.randomBit = null;
-    this.randomMode = null;
-    this.sampleValue = null;
     this.accValue = 0;
     this.accCount = 1;
-    this.tmp = null;
 
     this.reset();
 
@@ -1144,6 +1071,7 @@ class ChannelNoise {
     this.lengthCounterEnable = false;
     this.envDecayDisable = false;
     this.envDecayLoopEnable = false;
+    this.envReset = false;
     this.shiftNow = false;
     this.envDecayRate = 0;
     this.envDecayCounter = 0;
@@ -1260,31 +1188,6 @@ class ChannelSquare {
       ];
 
     this.sqr1 = square1;
-    this.isEnabled = null;
-    this.lengthCounterEnable = null;
-    this.sweepActive = null;
-    this.envDecayDisable = null;
-    this.envDecayLoopEnable = null;
-    this.envReset = null;
-    this.sweepCarry = null;
-    this.updateSweepPeriod = null;
-
-    this.progTimerCount = null;
-    this.progTimerMax = null;
-    this.lengthCounter = null;
-    this.squareCounter = null;
-    this.sweepCounter = null;
-    this.sweepCounterMax = null;
-    this.sweepMode = null;
-    this.sweepShiftAmount = null;
-    this.envDecayRate = null;
-    this.envDecayCounter = null;
-    this.envVolume = null;
-    this.masterVolume = null;
-    this.dutyMode = null;
-    this.sweepResult = null;
-    this.sampleValue = null;
-    this.vol = null;
 
     this.reset();
 
@@ -1338,6 +1241,10 @@ class ChannelSquare {
     this.sweepCarry = false;
     this.envDecayDisable = false;
     this.envDecayLoopEnable = false;
+    this.envReset = false;
+    this.updateSweepPeriod = false;
+    this.sweepResult = 0;
+    this.sampleValue = 0;
   }
 
   clockLengthCounter() {
@@ -1485,21 +1392,6 @@ class ChannelSquare {
 class ChannelTriangle {
   constructor(papu) {
     this.papu = papu;
-
-    this.isEnabled = null;
-    this.sampleCondition = null;
-    this.lengthCounterEnable = null;
-    this.lcHalt = null;
-    this.lcControl = null;
-
-    this.progTimerCount = null;
-    this.progTimerMax = null;
-    this.triangleCounter = null;
-    this.lengthCounter = null;
-    this.linearCounter = null;
-    this.lcLoadValue = null;
-    this.sampleValue = null;
-    this.tmp = null;
 
     this.reset();
 

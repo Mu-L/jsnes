@@ -11,81 +11,6 @@ class PPU {
   constructor(nes) {
     this.nes = nes;
 
-    // Keep Chrome happy
-    this.vramMem = null;
-    this.spriteMem = null;
-    this.vramAddress = null;
-    this.vramTmpAddress = null;
-    this.vramBufferedReadValue = null;
-    this.firstWrite = null;
-    // PPU has its own internal I/O bus. All PPU register writes update this
-    // latch. Reading write-only registers ($2000,$2001,$2003,$2005,$2006)
-    // returns this value. $2002 uses bits 4-0 from this latch.
-    // On real hardware the latch decays to 0 per-bit after ~600ms.
-    this.openBusLatch = null;
-    this.openBusDecayFrames = 0;
-    this.sramAddress = null;
-    this.currentMirroring = null;
-    this.requestEndFrame = null;
-    this.nmiOk = null;
-    this.dummyCycleToggle = null;
-    this.validTileData = null;
-    this.nmiCounter = null;
-    this.scanlineAlreadyRendered = null;
-    this.f_nmiOnVblank = null;
-    this.f_spriteSize = null;
-    this.f_bgPatternTable = null;
-    this.f_spPatternTable = null;
-    this.f_addrInc = null;
-    this.f_nTblAddress = null;
-    this.f_color = null;
-    this.f_spVisibility = null;
-    this.f_bgVisibility = null;
-    this.f_spClipping = null;
-    this.f_bgClipping = null;
-    this.f_dispType = null;
-    this.cntFV = null;
-    this.cntV = null;
-    this.cntH = null;
-    this.cntVT = null;
-    this.cntHT = null;
-    this.regFV = null;
-    this.regV = null;
-    this.regH = null;
-    this.regVT = null;
-    this.regHT = null;
-    this.regFH = null;
-    this.regS = null;
-    this.curNt = null;
-    this.attrib = null;
-    this.buffer = null;
-    this.bgbuffer = null;
-    this.pixrendered = null;
-
-    this.validTileData = null;
-    this.scantile = null;
-    this.scanline = null;
-    this.lastRenderedScanline = null;
-    this.curX = null;
-    this.sprX = null;
-    this.sprY = null;
-    this.sprTile = null;
-    this.sprCol = null;
-    this.vertFlip = null;
-    this.horiFlip = null;
-    this.bgPriority = null;
-    this.spr0HitX = null;
-    this.spr0HitY = null;
-    this.hitSpr0 = null;
-    this.sprPalette = null;
-    this.imgPalette = null;
-    this.ptTile = null;
-    this.ntable1 = null;
-    this.currentMirroring = null;
-    this.nameTable = null;
-    this.vramMirrorTable = null;
-    this.palTable = null;
-
     // Rendering Options:
     this.showSpr0Hit = false;
     this.clipToTvSize = true;
@@ -181,6 +106,10 @@ class PPU {
     this.vramTmpAddress = null;
     this.vramBufferedReadValue = 0;
     this.firstWrite = true; // VRAM/Scroll Hi/Lo latch
+    // PPU has its own internal I/O bus. All PPU register writes update this
+    // latch. Reading write-only registers ($2000,$2001,$2003,$2005,$2006)
+    // returns this value. $2002 uses bits 4-0 from this latch.
+    // On real hardware the latch decays to 0 per-bit after ~600ms.
     this.openBusLatch = 0;
     this.openBusDecayFrames = 0;
 

@@ -37,7 +37,7 @@ class NES {
     this.ppu = new PPU(this);
     this.papu = new PAPU(this);
     this.gameGenie = new GameGenie();
-    this.mmap = null; // set in loadROM()
+    this.mmap = null;
     this.controllers = {
       1: new Controller(),
       2: new Controller(),

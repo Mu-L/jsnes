@@ -846,14 +846,17 @@ class Mapper4 extends Mapper0 {
     this.CMD_SEL_1K_VROM_1C00 = 5;
     this.CMD_SEL_ROM_PAGE1 = 6;
     this.CMD_SEL_ROM_PAGE2 = 7;
+  }
 
-    this.command = null;
-    this.prgAddressSelect = null;
-    this.chrAddressSelect = null;
-    this.pageNumber = null;
-    this.irqCounter = null;
-    this.irqLatchValue = null;
-    this.irqEnable = null;
+  reset() {
+    super.reset();
+    this.command = 0;
+    this.prgAddressSelect = 0;
+    this.chrAddressSelect = 0;
+    this.pageNumber = 0;
+    this.irqCounter = 0;
+    this.irqLatchValue = 0;
+    this.irqEnable = 0;
     this.prgAddressChanged = false;
   }
 
