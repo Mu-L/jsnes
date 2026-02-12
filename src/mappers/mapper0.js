@@ -1,4 +1,4 @@
-import { copyArrayElements } from "./utils.js";
+import { copyArrayElements } from "../utils.js";
 
 class Mapper0 {
   constructor(nes) {

@@ -1,4 +1,4 @@
-import Mappers from "./mappers.js";
+import Mappers from "./mappers/mapper0.js";
 import Tile from "./tile.js";
 
 class ROM {

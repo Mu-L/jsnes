@@ -1,7 +1,7 @@
 import CPU from "./cpu.js";
 import Controller from "./controller.js";
-import PPU from "./ppu.js";
-import PAPU from "./papu.js";
+import PPU from "./ppu/index.js";
+import PAPU from "./papu/index.js";
 import GameGenie from "./gamegenie.js";
 import ROM from "./rom.js";
 

@@ -1,4 +1,4 @@
-import { fromJSON, toJSON } from "./utils.js";
+import { fromJSON, toJSON } from "../utils.js";
 
 const CPU_FREQ_NTSC = 1789772.5; //1789772.72727272d;
 // const CPU_FREQ_PAL = 1773447.4;

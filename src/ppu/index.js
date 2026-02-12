@@ -1,5 +1,5 @@
-import Tile from "./tile.js";
-import { fromJSON, toJSON } from "./utils.js";
+import Tile from "../tile.js";
+import { fromJSON, toJSON } from "../utils.js";
 
 class PPU {
   // Status flags:
