@@ -182,7 +182,7 @@ class NES {
   };
 
   getFPS() {
-    const now = +new Date();
+    const now = Date.now();
     let fps = null;
     if (this.lastFpsTime) {
       fps = this.fpsFrameCount / ((now - this.lastFpsTime) / 1000);
