@@ -18,14 +18,9 @@ class NES {
 
       emulateSound: true,
       sampleRate: 48000, // Sound sample rate in hz
+
+      ...opts,
     };
-    if (typeof opts !== "undefined") {
-      for (const key in this.opts) {
-        if (typeof opts[key] !== "undefined") {
-          this.opts[key] = opts[key];
-        }
-      }
-    }
 
     this.frameTime = 1000 / this.opts.preferredFrameRate;
 
