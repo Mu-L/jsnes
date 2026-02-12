@@ -64,7 +64,7 @@ class ROM {
   load(data) {
     let i, j, v;
 
-    if (data.indexOf("NES\x1a") === -1) {
+    if (!data.startsWith("NES\x1a")) {
       throw new Error("Not a valid NES ROM.");
     }
     this.header = new Uint8Array(16);

@@ -56,7 +56,7 @@ class GameGenie {
   }
 
   decode(code) {
-    if (code.indexOf(":") !== -1) return this.decodeHex(code);
+    if (code.includes(":")) return this.decodeHex(code);
 
     const digits = code.toUpperCase().split("").map(toDigit);
 
