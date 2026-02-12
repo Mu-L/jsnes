@@ -8,18 +8,18 @@ class Tile {
   }
 
   setBuffer(scanline) {
-    for (this.y = 0; this.y < 8; this.y++) {
-      this.setScanline(this.y, scanline[this.y], scanline[this.y + 8]);
+    for (let y = 0; y < 8; y++) {
+      this.setScanline(y, scanline[y], scanline[y + 8]);
     }
   }
 
   setScanline(sline, b1, b2) {
     this.initialized = true;
-    this.tIndex = sline << 3;
-    for (this.x = 0; this.x < 8; this.x++) {
-      this.pix[this.tIndex + this.x] =
-        ((b1 >> (7 - this.x)) & 1) + (((b2 >> (7 - this.x)) & 1) << 1);
-      if (this.pix[this.tIndex + this.x] === 0) {
+    let tIndex = sline << 3;
+    for (let x = 0; x < 8; x++) {
+      this.pix[tIndex + x] =
+        ((b1 >> (7 - x)) & 1) + (((b2 >> (7 - x)) & 1) << 1);
+      if (this.pix[tIndex + x] === 0) {
         this.opaque[sline] = false;
       }
     }
@@ -44,9 +44,6 @@ class Tile {
       return;
     }
 
-    this.w = srcx2 - srcx1;
-    this.h = srcy2 - srcy1;
-
     if (dx < 0) {
       srcx1 -= dx;
     }
@@ -61,108 +58,109 @@ class Tile {
       srcy2 = 240 - dy;
     }
 
+    let fbIndex, tIndex, palIndex, tpri;
+
     if (!flipHorizontal && !flipVertical) {
-      this.fbIndex = (dy << 8) + dx;
-      this.tIndex = 0;
-      for (this.y = 0; this.y < 8; this.y++) {
-        for (this.x = 0; this.x < 8; this.x++) {
+      fbIndex = (dy << 8) + dx;
+      tIndex = 0;
+      for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 8; x++) {
           if (
-            this.x >= srcx1 &&
-            this.x < srcx2 &&
-            this.y >= srcy1 &&
-            this.y < srcy2
+            x >= srcx1 &&
+            x < srcx2 &&
+            y >= srcy1 &&
+            y < srcy2
           ) {
-            this.palIndex = this.pix[this.tIndex];
-            this.tpri = priTable[this.fbIndex];
-            if (this.palIndex !== 0 && pri <= (this.tpri & 0xff)) {
-              //console.log("Rendering upright tile to buffer");
-              buffer[this.fbIndex] = palette[this.palIndex + palAdd];
-              this.tpri = (this.tpri & 0xf00) | pri;
-              priTable[this.fbIndex] = this.tpri;
+            palIndex = this.pix[tIndex];
+            tpri = priTable[fbIndex];
+            if (palIndex !== 0 && pri <= (tpri & 0xff)) {
+              buffer[fbIndex] = palette[palIndex + palAdd];
+              tpri = (tpri & 0xf00) | pri;
+              priTable[fbIndex] = tpri;
             }
           }
-          this.fbIndex++;
-          this.tIndex++;
+          fbIndex++;
+          tIndex++;
         }
-        this.fbIndex -= 8;
-        this.fbIndex += 256;
+        fbIndex -= 8;
+        fbIndex += 256;
       }
     } else if (flipHorizontal && !flipVertical) {
-      this.fbIndex = (dy << 8) + dx;
-      this.tIndex = 7;
-      for (this.y = 0; this.y < 8; this.y++) {
-        for (this.x = 0; this.x < 8; this.x++) {
+      fbIndex = (dy << 8) + dx;
+      tIndex = 7;
+      for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 8; x++) {
           if (
-            this.x >= srcx1 &&
-            this.x < srcx2 &&
-            this.y >= srcy1 &&
-            this.y < srcy2
+            x >= srcx1 &&
+            x < srcx2 &&
+            y >= srcy1 &&
+            y < srcy2
           ) {
-            this.palIndex = this.pix[this.tIndex];
-            this.tpri = priTable[this.fbIndex];
-            if (this.palIndex !== 0 && pri <= (this.tpri & 0xff)) {
-              buffer[this.fbIndex] = palette[this.palIndex + palAdd];
-              this.tpri = (this.tpri & 0xf00) | pri;
-              priTable[this.fbIndex] = this.tpri;
+            palIndex = this.pix[tIndex];
+            tpri = priTable[fbIndex];
+            if (palIndex !== 0 && pri <= (tpri & 0xff)) {
+              buffer[fbIndex] = palette[palIndex + palAdd];
+              tpri = (tpri & 0xf00) | pri;
+              priTable[fbIndex] = tpri;
             }
           }
-          this.fbIndex++;
-          this.tIndex--;
+          fbIndex++;
+          tIndex--;
         }
-        this.fbIndex -= 8;
-        this.fbIndex += 256;
-        this.tIndex += 16;
+        fbIndex -= 8;
+        fbIndex += 256;
+        tIndex += 16;
       }
     } else if (flipVertical && !flipHorizontal) {
-      this.fbIndex = (dy << 8) + dx;
-      this.tIndex = 56;
-      for (this.y = 0; this.y < 8; this.y++) {
-        for (this.x = 0; this.x < 8; this.x++) {
+      fbIndex = (dy << 8) + dx;
+      tIndex = 56;
+      for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 8; x++) {
           if (
-            this.x >= srcx1 &&
-            this.x < srcx2 &&
-            this.y >= srcy1 &&
-            this.y < srcy2
+            x >= srcx1 &&
+            x < srcx2 &&
+            y >= srcy1 &&
+            y < srcy2
           ) {
-            this.palIndex = this.pix[this.tIndex];
-            this.tpri = priTable[this.fbIndex];
-            if (this.palIndex !== 0 && pri <= (this.tpri & 0xff)) {
-              buffer[this.fbIndex] = palette[this.palIndex + palAdd];
-              this.tpri = (this.tpri & 0xf00) | pri;
-              priTable[this.fbIndex] = this.tpri;
+            palIndex = this.pix[tIndex];
+            tpri = priTable[fbIndex];
+            if (palIndex !== 0 && pri <= (tpri & 0xff)) {
+              buffer[fbIndex] = palette[palIndex + palAdd];
+              tpri = (tpri & 0xf00) | pri;
+              priTable[fbIndex] = tpri;
             }
           }
-          this.fbIndex++;
-          this.tIndex++;
+          fbIndex++;
+          tIndex++;
         }
-        this.fbIndex -= 8;
-        this.fbIndex += 256;
-        this.tIndex -= 16;
+        fbIndex -= 8;
+        fbIndex += 256;
+        tIndex -= 16;
       }
     } else {
-      this.fbIndex = (dy << 8) + dx;
-      this.tIndex = 63;
-      for (this.y = 0; this.y < 8; this.y++) {
-        for (this.x = 0; this.x < 8; this.x++) {
+      fbIndex = (dy << 8) + dx;
+      tIndex = 63;
+      for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 8; x++) {
           if (
-            this.x >= srcx1 &&
-            this.x < srcx2 &&
-            this.y >= srcy1 &&
-            this.y < srcy2
+            x >= srcx1 &&
+            x < srcx2 &&
+            y >= srcy1 &&
+            y < srcy2
           ) {
-            this.palIndex = this.pix[this.tIndex];
-            this.tpri = priTable[this.fbIndex];
-            if (this.palIndex !== 0 && pri <= (this.tpri & 0xff)) {
-              buffer[this.fbIndex] = palette[this.palIndex + palAdd];
-              this.tpri = (this.tpri & 0xf00) | pri;
-              priTable[this.fbIndex] = this.tpri;
+            palIndex = this.pix[tIndex];
+            tpri = priTable[fbIndex];
+            if (palIndex !== 0 && pri <= (tpri & 0xff)) {
+              buffer[fbIndex] = palette[palIndex + palAdd];
+              tpri = (tpri & 0xf00) | pri;
+              priTable[fbIndex] = tpri;
             }
           }
-          this.fbIndex++;
-          this.tIndex--;
+          fbIndex++;
+          tIndex--;
         }
-        this.fbIndex -= 8;
-        this.fbIndex += 256;
+        fbIndex -= 8;
+        fbIndex += 256;
       }
     }
   }
