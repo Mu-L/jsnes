@@ -915,7 +915,7 @@ class PPU {
 
   renderFramePartially(startScan, scanCount) {
     if (this.f_spVisibility === 1) {
-      this.renderSpritesPartially(startScan, scanCount, true);
+      this.renderSpritesPartially(startScan, scanCount, 1);
     }
 
     if (this.f_bgVisibility === 1) {
@@ -935,7 +935,7 @@ class PPU {
     }
 
     if (this.f_spVisibility === 1) {
-      this.renderSpritesPartially(startScan, scanCount, false);
+      this.renderSpritesPartially(startScan, scanCount, 0);
     }
 
     this.validTileData = false;
@@ -1441,9 +1441,9 @@ class PPU {
       this.sprTile[tIndex] = value;
     } else if (address % 4 === 2) {
       // Attributes
-      this.vertFlip[tIndex] = (value & 0x80) !== 0;
-      this.horiFlip[tIndex] = (value & 0x40) !== 0;
-      this.bgPriority[tIndex] = (value & 0x20) !== 0;
+      this.vertFlip[tIndex] = (value >> 7) & 1;
+      this.horiFlip[tIndex] = (value >> 6) & 1;
+      this.bgPriority[tIndex] = (value >> 5) & 1;
       this.sprCol[tIndex] = (value & 3) << 2;
     } else if (address % 4 === 3) {
       // X coordinate
