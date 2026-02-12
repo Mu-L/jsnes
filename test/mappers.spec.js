@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import Mappers from "../src/mappers/mapper0.js";
+import Mappers from "../src/mappers/index.js";
 
 describe("Mappers", function () {
   let mapper = null;
