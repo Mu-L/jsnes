@@ -28,7 +28,7 @@ class GameGenie {
   }
 
   addPatch(addr, value, key) {
-    this.patches.push({ addr: addr, value: value, key: key });
+    this.patches.push({ addr, value, key });
   }
 
   removeAllCodes() {
@@ -85,7 +85,7 @@ class GameGenie {
 
     const wantskey = !!(digits[2] >> 3);
 
-    return { value: value, addr: addr, wantskey: wantskey, key: key };
+    return { value, addr, wantskey, key };
   }
 
   encodeHex(addr, value, key, wantskey) {
@@ -114,7 +114,7 @@ class GameGenie {
         ? parseInt(match[3].substring(1), 16)
         : undefined;
 
-    return { value: value, addr: addr, wantskey: wantskey, key: key };
+    return { value, addr, wantskey, key };
   }
 
   encode(addr, value, key, wantskey) {
