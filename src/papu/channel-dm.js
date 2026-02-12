@@ -1,17 +1,38 @@
 import { fromJSON, toJSON } from "../utils.js";
 
 class ChannelDM {
+  static MODE_NORMAL = 0;
+  static MODE_LOOP = 1;
+  static MODE_IRQ = 2;
+
+  static JSON_PROPERTIES = [
+    "isEnabled",
+    "hasSample",
+    "irqGenerated",
+    "playMode",
+    "dmaFrequency",
+    "dmaCounter",
+    "deltaCounter",
+    "playStartAddress",
+    "playAddress",
+    "playLength",
+    "playLengthCounter",
+    "shiftCounter",
+    "reg4012",
+    "reg4013",
+    "sample",
+    "dacLsb",
+    "data",
+    "lastFetchedByte",
+  ];
+
   constructor(papu) {
     this.papu = papu;
-
-    this.MODE_NORMAL = 0;
-    this.MODE_LOOP = 1;
-    this.MODE_IRQ = 2;
 
     this.isEnabled = false;
     this.hasSample = false;
     this.irqGenerated = false;
-    this.playMode = this.MODE_NORMAL;
+    this.playMode = ChannelDM.MODE_NORMAL;
     this.dmaFrequency = 0;
     this.dmaCounter = 0;
     this.deltaCounter = 0;
@@ -26,30 +47,6 @@ class ChannelDM {
     this.reg4013 = 0;
     this.data = 0;
     this.lastFetchedByte = 0;
-
-    this.JSON_PROPERTIES = [
-      "MODE_NORMAL",
-      "MODE_LOOP",
-      "MODE_IRQ",
-      "isEnabled",
-      "hasSample",
-      "irqGenerated",
-      "playMode",
-      "dmaFrequency",
-      "dmaCounter",
-      "deltaCounter",
-      "playStartAddress",
-      "playAddress",
-      "playLength",
-      "playLengthCounter",
-      "shiftCounter",
-      "reg4012",
-      "reg4013",
-      "sample",
-      "dacLsb",
-      "data",
-      "lastFetchedByte",
-    ];
   }
 
   clockDmc() {
@@ -88,7 +85,7 @@ class ChannelDM {
   }
 
   endOfSample() {
-    if (this.playLengthCounter === 0 && this.playMode === this.MODE_LOOP) {
+    if (this.playLengthCounter === 0 && this.playMode === ChannelDM.MODE_LOOP) {
       // Start from beginning of sample:
       this.playAddress = this.playStartAddress;
       this.playLengthCounter = this.playLength;
@@ -100,7 +97,7 @@ class ChannelDM {
 
       if (this.playLengthCounter === 0) {
         // Last byte of sample fetched, generate IRQ:
-        if (this.playMode === this.MODE_IRQ) {
+        if (this.playMode === ChannelDM.MODE_IRQ) {
           // Generate IRQ:
           this.irqGenerated = true;
         }
@@ -130,11 +127,11 @@ class ChannelDM {
     if (address === 0x4010) {
       // Play mode, DMA Frequency
       if (value >> 6 === 0) {
-        this.playMode = this.MODE_NORMAL;
+        this.playMode = ChannelDM.MODE_NORMAL;
       } else if (((value >> 6) & 1) === 1) {
-        this.playMode = this.MODE_LOOP;
+        this.playMode = ChannelDM.MODE_LOOP;
       } else if (value >> 6 === 2) {
-        this.playMode = this.MODE_IRQ;
+        this.playMode = ChannelDM.MODE_IRQ;
       }
 
       if ((value & 0x80) === 0) {

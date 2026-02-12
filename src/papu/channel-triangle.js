@@ -17,22 +17,6 @@ class ChannelTriangle {
     this.lcControl = false;
     this.tmp = 0;
     this.sampleValue = 0xf;
-
-    this.JSON_PROPERTIES = [
-      "isEnabled",
-      "sampleCondition",
-      "lengthCounterEnable",
-      "lcHalt",
-      "lcControl",
-      "progTimerCount",
-      "progTimerMax",
-      "triangleCounter",
-      "lengthCounter",
-      "linearCounter",
-      "lcLoadValue",
-      "sampleValue",
-      "tmp",
-    ];
   }
 
   clockLengthCounter() {
@@ -139,6 +123,22 @@ class ChannelTriangle {
   fromJSON(s) {
     fromJSON(this, s);
   }
+
+  static JSON_PROPERTIES = [
+    "isEnabled",
+    "sampleCondition",
+    "lengthCounterEnable",
+    "lcHalt",
+    "lcControl",
+    "progTimerCount",
+    "progTimerMax",
+    "triangleCounter",
+    "lengthCounter",
+    "linearCounter",
+    "lcLoadValue",
+    "sampleValue",
+    "tmp",
+  ];
 }
 
 export default ChannelTriangle;

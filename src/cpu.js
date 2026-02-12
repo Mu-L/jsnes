@@ -1819,7 +1819,7 @@ class CPU {
     this.F_SIGN = (st >> 7) & 1;
   }
 
-  JSON_PROPERTIES = [
+  static JSON_PROPERTIES = [
     "mem",
     "cyclesToHalt",
     "irqRequested",

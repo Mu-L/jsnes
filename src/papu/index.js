@@ -85,46 +85,6 @@ class PAPU {
     this.extraCycles = 0;
     this.maxSample = -500000;
     this.minSample = 500000;
-
-    this.JSON_PROPERTIES = [
-      "channelEnableValue",
-      "sampleRate",
-      "frameIrqEnabled",
-      "frameIrqActive",
-      "startedPlaying",
-      "recordOutput",
-      "frameCycleCounter",
-      "frameStep",
-      "countSequence",
-      "sampleTimer",
-      "sampleTimerMax",
-      "sampleCount",
-      "triValue",
-      "smpSquare1",
-      "smpSquare2",
-      "smpTriangle",
-      "smpDmc",
-      "accCount",
-      "prevSampleL",
-      "prevSampleR",
-      "smpAccumL",
-      "smpAccumR",
-      "masterVolume",
-      "stereoPosLSquare1",
-      "stereoPosLSquare2",
-      "stereoPosLTriangle",
-      "stereoPosLNoise",
-      "stereoPosLDMC",
-      "stereoPosRSquare1",
-      "stereoPosRSquare2",
-      "stereoPosRTriangle",
-      "stereoPosRNoise",
-      "stereoPosRDMC",
-      "extraCycles",
-      "maxSample",
-      "minSample",
-      "panning",
-    ];
   }
 
   // eslint-disable-next-line no-unused-vars
@@ -797,6 +757,46 @@ class PAPU {
     this.square2.fromJSON(s.square2);
     this.triangle.fromJSON(s.triangle);
   }
+
+  static JSON_PROPERTIES = [
+    "channelEnableValue",
+    "sampleRate",
+    "frameIrqEnabled",
+    "frameIrqActive",
+    "startedPlaying",
+    "recordOutput",
+    "frameCycleCounter",
+    "frameStep",
+    "countSequence",
+    "sampleTimer",
+    "sampleTimerMax",
+    "sampleCount",
+    "triValue",
+    "smpSquare1",
+    "smpSquare2",
+    "smpTriangle",
+    "smpDmc",
+    "accCount",
+    "prevSampleL",
+    "prevSampleR",
+    "smpAccumL",
+    "smpAccumR",
+    "masterVolume",
+    "stereoPosLSquare1",
+    "stereoPosLSquare2",
+    "stereoPosLTriangle",
+    "stereoPosLNoise",
+    "stereoPosLDMC",
+    "stereoPosRSquare1",
+    "stereoPosRSquare2",
+    "stereoPosRTriangle",
+    "stereoPosRNoise",
+    "stereoPosRDMC",
+    "extraCycles",
+    "maxSample",
+    "minSample",
+    "panning",
+  ];
 }
 
 export default PAPU;

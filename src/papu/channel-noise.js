@@ -24,29 +24,6 @@ class ChannelNoise {
     this.tmp = 0;
     this.accValue = 0;
     this.accCount = 1;
-
-    this.JSON_PROPERTIES = [
-      "isEnabled",
-      "envDecayDisable",
-      "envDecayLoopEnable",
-      "lengthCounterEnable",
-      "envReset",
-      "shiftNow",
-      "lengthCounter",
-      "progTimerCount",
-      "progTimerMax",
-      "envDecayRate",
-      "envDecayCounter",
-      "envVolume",
-      "masterVolume",
-      "shiftReg",
-      "randomBit",
-      "randomMode",
-      "sampleValue",
-      "accValue",
-      "accCount",
-      "tmp",
-    ];
   }
 
   clockLengthCounter() {
@@ -131,6 +108,29 @@ class ChannelNoise {
   fromJSON(s) {
     fromJSON(this, s);
   }
+
+  static JSON_PROPERTIES = [
+    "isEnabled",
+    "envDecayDisable",
+    "envDecayLoopEnable",
+    "lengthCounterEnable",
+    "envReset",
+    "shiftNow",
+    "lengthCounter",
+    "progTimerCount",
+    "progTimerMax",
+    "envDecayRate",
+    "envDecayCounter",
+    "envVolume",
+    "masterVolume",
+    "shiftReg",
+    "randomBit",
+    "randomMode",
+    "sampleValue",
+    "accValue",
+    "accCount",
+    "tmp",
+  ];
 }
 
 export default ChannelNoise;

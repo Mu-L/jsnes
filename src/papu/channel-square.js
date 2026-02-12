@@ -45,33 +45,6 @@ class ChannelSquare {
     this.updateSweepPeriod = false;
     this.sweepResult = 0;
     this.sampleValue = 0;
-
-    this.JSON_PROPERTIES = [
-      "isEnabled",
-      "lengthCounterEnable",
-      "sweepActive",
-      "envDecayDisable",
-      "envDecayLoopEnable",
-      "envReset",
-      "sweepCarry",
-      "updateSweepPeriod",
-      "progTimerCount",
-      "progTimerMax",
-      "lengthCounter",
-      "squareCounter",
-      "sweepCounter",
-      "sweepCounterMax",
-      "sweepMode",
-      "sweepShiftAmount",
-      "envDecayRate",
-      "envDecayCounter",
-      "envVolume",
-      "masterVolume",
-      "dutyMode",
-      "sweepResult",
-      "sampleValue",
-      "vol",
-    ];
   }
 
   clockLengthCounter() {
@@ -214,6 +187,33 @@ class ChannelSquare {
   fromJSON(s) {
     fromJSON(this, s);
   }
+
+  static JSON_PROPERTIES = [
+    "isEnabled",
+    "lengthCounterEnable",
+    "sweepActive",
+    "envDecayDisable",
+    "envDecayLoopEnable",
+    "envReset",
+    "sweepCarry",
+    "updateSweepPeriod",
+    "progTimerCount",
+    "progTimerMax",
+    "lengthCounter",
+    "squareCounter",
+    "sweepCounter",
+    "sweepCounterMax",
+    "sweepMode",
+    "sweepShiftAmount",
+    "envDecayRate",
+    "envDecayCounter",
+    "envVolume",
+    "masterVolume",
+    "dutyMode",
+    "sweepResult",
+    "sampleValue",
+    "vol",
+  ];
 }
 
 export default ChannelSquare;

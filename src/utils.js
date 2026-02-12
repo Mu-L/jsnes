@@ -9,8 +9,9 @@ export function copyArray(src) {
 }
 
 export function fromJSON(obj, state) {
-  for (let i = 0; i < obj.JSON_PROPERTIES.length; i++) {
-    const prop = obj.JSON_PROPERTIES[i];
+  const props = obj.constructor.JSON_PROPERTIES;
+  for (let i = 0; i < props.length; i++) {
+    const prop = props[i];
     const current = obj[prop];
     const value = state[prop];
     if (ArrayBuffer.isView(current) && Array.isArray(value)) {
@@ -25,8 +26,9 @@ export function fromJSON(obj, state) {
 
 export function toJSON(obj) {
   const state = {};
-  for (let i = 0; i < obj.JSON_PROPERTIES.length; i++) {
-    const prop = obj.JSON_PROPERTIES[i];
+  const props = obj.constructor.JSON_PROPERTIES;
+  for (let i = 0; i < props.length; i++) {
+    const prop = props[i];
     const value = obj[prop];
     // Typed arrays must be converted to plain arrays for JSON.stringify,
     // which otherwise serializes them as objects ({0: v, 1: v, ...}).
