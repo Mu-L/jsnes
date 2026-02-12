@@ -13,33 +13,33 @@ function toHex(n, width) {
   return "0000".substring(0, width - s.length) + s;
 }
 
-const GameGenie = function () {
-  this.patches = [];
-  this.enabled = true;
-};
-
-GameGenie.prototype = {
-  setEnabled: function (enabled) {
-    this.enabled = enabled;
-  },
-
-  addCode: function (code) {
-    this.patches.push(this.decode(code));
-  },
-
-  addPatch: function (addr, value, key) {
-    this.patches.push({ addr: addr, value: value, key: key });
-  },
-
-  removeAllCodes: function () {
+class GameGenie {
+  constructor() {
     this.patches = [];
-  },
+    this.enabled = true;
+  }
+
+  setEnabled(enabled) {
+    this.enabled = enabled;
+  }
+
+  addCode(code) {
+    this.patches.push(this.decode(code));
+  }
+
+  addPatch(addr, value, key) {
+    this.patches.push({ addr: addr, value: value, key: key });
+  }
+
+  removeAllCodes() {
+    this.patches = [];
+  }
 
   // Apply Game Genie patches to a value being read from the given address.
   // Game Genie works by intercepting ROM reads and substituting values.
   // The address is masked to 15 bits because Game Genie ignores the
   // highest bit (ROM is mirrored in $8000-$FFFF).
-  applyCodes: function (addr, value) {
+  applyCodes(addr, value) {
     if (!this.enabled) return value;
 
     for (let i = 0; i < this.patches.length; ++i) {
@@ -53,9 +53,9 @@ GameGenie.prototype = {
       }
     }
     return value;
-  },
+  }
 
-  decode: function (code) {
+  decode(code) {
     if (code.indexOf(":") !== -1) return this.decodeHex(code);
 
     const digits = code.toUpperCase().split("").map(toDigit);
@@ -86,9 +86,9 @@ GameGenie.prototype = {
     const wantskey = !!(digits[2] >> 3);
 
     return { value: value, addr: addr, wantskey: wantskey, key: key };
-  },
+  }
 
-  encodeHex: function (addr, value, key, wantskey) {
+  encodeHex(addr, value, key, wantskey) {
     let s = toHex(addr, 4) + ":" + toHex(value, 2);
 
     if (key !== undefined || wantskey) {
@@ -100,9 +100,9 @@ GameGenie.prototype = {
     }
 
     return s;
-  },
+  }
 
-  decodeHex: function (s) {
+  decodeHex(s) {
     const match = s.match(/([0-9a-fA-F]+):([0-9a-fA-F]+)(\?[0-9a-fA-F]*)?/);
     if (!match) return null;
 
@@ -115,9 +115,9 @@ GameGenie.prototype = {
         : undefined;
 
     return { value: value, addr: addr, wantskey: wantskey, key: key };
-  },
+  }
 
-  encode: function (addr, value, key, wantskey) {
+  encode(addr, value, key, wantskey) {
     const digits = Array(6);
 
     digits[0] = (value & 7) + ((value >> 4) & 8);
@@ -140,7 +140,7 @@ GameGenie.prototype = {
     const code = digits.map(toLetter).join("");
 
     return code;
-  },
-};
+  }
+}
 
 module.exports = GameGenie;

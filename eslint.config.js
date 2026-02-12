@@ -6,7 +6,7 @@ module.exports = [
   eslintConfigPrettier,
   {
     languageOptions: {
-      ecmaVersion: 2017,
+      ecmaVersion: 2022,
       sourceType: "commonjs",
       globals: {
         // Browser globals

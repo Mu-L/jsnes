@@ -1,54 +1,54 @@
 const utils = require("./utils");
 
-const CPU = function (nes) {
-  this.nes = nes;
-
-  // Keep Chrome happy
-  this.mem = null;
-  this.REG_ACC = null;
-  this.REG_X = null;
-  this.REG_Y = null;
-  this.REG_SP = null;
-  this.REG_PC = null;
-  this.REG_PC_NEW = null;
-  this.REG_STATUS = null;
-  this.F_CARRY = null;
-  this.F_DECIMAL = null;
-  this.F_INTERRUPT = null;
-  this.F_INTERRUPT_NEW = null;
-  this.F_OVERFLOW = null;
-  this.F_SIGN = null;
-  this.F_ZERO = null;
-  this.F_NOTUSED = null;
-  this.F_NOTUSED_NEW = null;
-  this.F_BRK = null;
-  this.F_BRK_NEW = null;
-  this.opdata = null;
-  this.cyclesToHalt = null;
-  this.crash = null;
-  this.irqRequested = null;
-  this.irqType = null;
-  // Tracks the last value on the CPU data bus. When reading from unmapped
-  // addresses ("open bus"), the NES returns this value. Updated on every
-  // read, write, push, pull, and interrupt vector fetch.
-  // See https://www.nesdev.org/wiki/Open_bus_behavior
-  this.dataBus = null;
-
-  // PPU catch-up: mid-instruction synchronization (see _ppuCatchUp)
-  this.instrBusCycles = null;
-  this.ppuCatchupDots = null;
-  this.ppuFrameEnded = null;
-
-  this.reset();
-};
-
-CPU.prototype = {
+class CPU {
   // IRQ Types
-  IRQ_NORMAL: 0,
-  IRQ_NMI: 1,
-  IRQ_RESET: 2,
+  IRQ_NORMAL = 0;
+  IRQ_NMI = 1;
+  IRQ_RESET = 2;
 
-  reset: function () {
+  constructor(nes) {
+    this.nes = nes;
+
+    // Keep Chrome happy
+    this.mem = null;
+    this.REG_ACC = null;
+    this.REG_X = null;
+    this.REG_Y = null;
+    this.REG_SP = null;
+    this.REG_PC = null;
+    this.REG_PC_NEW = null;
+    this.REG_STATUS = null;
+    this.F_CARRY = null;
+    this.F_DECIMAL = null;
+    this.F_INTERRUPT = null;
+    this.F_INTERRUPT_NEW = null;
+    this.F_OVERFLOW = null;
+    this.F_SIGN = null;
+    this.F_ZERO = null;
+    this.F_NOTUSED = null;
+    this.F_NOTUSED_NEW = null;
+    this.F_BRK = null;
+    this.F_BRK_NEW = null;
+    this.opdata = null;
+    this.cyclesToHalt = null;
+    this.crash = null;
+    this.irqRequested = null;
+    this.irqType = null;
+    // Tracks the last value on the CPU data bus. When reading from unmapped
+    // addresses ("open bus"), the NES returns this value. Updated on every
+    // read, write, push, pull, and interrupt vector fetch.
+    // See https://www.nesdev.org/wiki/Open_bus_behavior
+    this.dataBus = null;
+
+    // PPU catch-up: mid-instruction synchronization (see _ppuCatchUp)
+    this.instrBusCycles = null;
+    this.ppuCatchupDots = null;
+    this.ppuFrameEnded = null;
+
+    this.reset();
+  }
+
+  reset() {
     // Main memory
     this.mem = new Array(0x10000);
 
@@ -122,10 +122,10 @@ CPU.prototype = {
     this.ppuCatchupDots = 0; // PPU dots already advanced mid-instruction
     this.ppuFrameEnded = false; // set if VBlank/NMI fired during catch-up
     this.apuCatchupCycles = 0; // APU frame counter cycles already advanced
-  },
+  }
 
   // Emulates a single CPU instruction, returns the number of cycles
-  emulate: function () {
+  emulate() {
     let temp;
     let add;
     // High byte of the base address before index addition, used by
@@ -1558,12 +1558,12 @@ CPU.prototype = {
     } // end of switch
 
     return cycleCount;
-  },
+  }
 
   // Reads from cartridge ROM, applying any active Game Genie patches.
   // Used for opcode fetches, operand reads, indirect jumps, and interrupt
   // vectors — all places where Game Genie can intercept ROM reads.
-  loadFromCartridge: function (addr) {
+  loadFromCartridge(addr) {
     let value = this.nes.mmap.load(addr);
 
     if (this.nes.gameGenie.enabled && this.nes.gameGenie.patches.length > 0) {
@@ -1571,10 +1571,10 @@ CPU.prototype = {
     }
 
     return value;
-  },
+  }
 
   // Each load() call represents one CPU bus read cycle.
-  load: function (addr) {
+  load(addr) {
     // Catch up PPU before reading PPU registers so the read sees
     // up-to-date VBlank/sprite-0 flags. See _ppuCatchUp().
     if (addr >= 0x2000 && addr < 0x4000) {
@@ -1600,9 +1600,9 @@ CPU.prototype = {
     }
     this.instrBusCycles++;
     return this.dataBus;
-  },
+  }
 
-  load16bit: function (addr) {
+  load16bit(addr) {
     let lo;
     if (addr < 0x1fff) {
       this.dataBus = this.mem[addr & 0x7ff];
@@ -1617,10 +1617,10 @@ CPU.prototype = {
       this.instrBusCycles += 2;
       return lo | (this.dataBus << 8);
     }
-  },
+  }
 
   // Each write() call represents one CPU bus write cycle.
-  write: function (addr, val) {
+  write(addr, val) {
     this.dataBus = val;
     // Catch up PPU before writing PPU registers so the write takes
     // effect at the correct PPU dot position. See _ppuCatchUp().
@@ -1633,9 +1633,9 @@ CPU.prototype = {
       this.nes.mmap.write(addr, val);
     }
     this.instrBusCycles++;
-  },
+  }
 
-  requestIrq: function (type) {
+  requestIrq(type) {
     if (this.irqRequested) {
       if (type === this.IRQ_NORMAL) {
         return;
@@ -1644,24 +1644,24 @@ CPU.prototype = {
     }
     this.irqRequested = true;
     this.irqType = type;
-  },
+  }
 
-  push: function (value) {
+  push(value) {
     this.dataBus = value;
     this.nes.mmap.write(this.REG_SP | 0x100, value);
     this.REG_SP--;
     // this.REG_SP = 0x0100 | (this.REG_SP & 0xff);
     this.REG_SP = this.REG_SP & 0xff;
     this.instrBusCycles++;
-  },
+  }
 
-  pull: function () {
+  pull() {
     this.REG_SP++;
     this.REG_SP = this.REG_SP & 0xff;
     this.dataBus = this.nes.mmap.load(0x100 | this.REG_SP);
     this.instrBusCycles++;
     return this.dataBus;
-  },
+  }
 
   // Advance the PPU to match the current CPU cycle within the instruction.
   //
@@ -1710,7 +1710,7 @@ CPU.prototype = {
   //
   // Returns a large number (0x7FFFFFFF) if no DMA fetch is pending.
   // See https://www.nesdev.org/wiki/APU_DMC
-  _cyclesToNextDmcFetch: function () {
+  _cyclesToNextDmcFetch() {
     if (!this.nes.papu) {
       return 0x7fffffff;
     }
@@ -1735,14 +1735,14 @@ CPU.prototype = {
     let cyclesToFirstClock = (dmc.shiftCounter + 7) >> 3;
     if (cyclesToFirstClock <= 0) cyclesToFirstClock = cyclesPerClock;
     return cyclesToFirstClock + (dmc.dmaCounter - 1) * cyclesPerClock;
-  },
+  }
 
   // The logic mirrors the frame loop's dot-by-dot path (sprite 0 hit,
   // scanline boundaries, NMI countdown). If VBlank fires mid-instruction,
   // we set ppuFrameEnded so the frame loop knows to break.
   //
   // See https://www.nesdev.org/wiki/Catch-up
-  _ppuCatchUp: function () {
+  _ppuCatchUp() {
     let ppu = this.nes.ppu;
     let targetDots = this.instrBusCycles * 3;
     while (this.ppuCatchupDots < targetDots) {
@@ -1772,31 +1772,31 @@ CPU.prototype = {
       }
       this.ppuCatchupDots++;
     }
-  },
+  }
 
   // Advance the APU frame counter to match the current instruction's bus
   // cycle position, so that $4015 reads see up-to-date length counter status
   // and IRQ flags. Uses the lightweight advanceFrameCounter() which only
   // fires frame counter steps (no DMC, channel timers, or audio sampling).
   // See https://www.nesdev.org/wiki/Catch-up
-  _apuCatchUp: function () {
+  _apuCatchUp() {
     let targetCycles = this.instrBusCycles;
     if (targetCycles > this.apuCatchupCycles) {
       this.nes.papu.advanceFrameCounter(targetCycles - this.apuCatchupCycles);
       this.apuCatchupCycles = targetCycles;
     }
-  },
+  }
 
-  pageCrossed: function (addr1, addr2) {
+  pageCrossed(addr1, addr2) {
     return (addr1 & 0xff00) !== (addr2 & 0xff00);
-  },
+  }
 
-  haltCycles: function (cycles) {
+  haltCycles(cycles) {
     this.cyclesToHalt += cycles;
-  },
+  }
 
   // Interrupt vector fetches update the data bus, just like normal reads.
-  doNonMaskableInterrupt: function (status) {
+  doNonMaskableInterrupt(status) {
     if (this.nes.mmap === null) return;
 
     this.REG_PC_NEW++;
@@ -1810,17 +1810,17 @@ CPU.prototype = {
     this.dataBus = this.loadFromCartridge(0xfffb);
     this.REG_PC_NEW = lo | (this.dataBus << 8);
     this.REG_PC_NEW--;
-  },
+  }
 
-  doResetInterrupt: function () {
+  doResetInterrupt() {
     this.dataBus = this.loadFromCartridge(0xfffc);
     let lo = this.dataBus;
     this.dataBus = this.loadFromCartridge(0xfffd);
     this.REG_PC_NEW = lo | (this.dataBus << 8);
     this.REG_PC_NEW--;
-  },
+  }
 
-  doIrq: function (status) {
+  doIrq(status) {
     this.REG_PC_NEW++;
     this.push((this.REG_PC_NEW >> 8) & 0xff);
     this.push(this.REG_PC_NEW & 0xff);
@@ -1833,9 +1833,9 @@ CPU.prototype = {
     this.dataBus = this.loadFromCartridge(0xffff);
     this.REG_PC_NEW = lo | (this.dataBus << 8);
     this.REG_PC_NEW--;
-  },
+  }
 
-  getStatus: function () {
+  getStatus() {
     // F_ZERO is 0 when the Z flag is set, non-zero when clear (see reset())
     return (
       this.F_CARRY |
@@ -1847,9 +1847,9 @@ CPU.prototype = {
       (this.F_OVERFLOW << 6) |
       (this.F_SIGN << 7)
     );
-  },
+  }
 
-  setStatus: function (st) {
+  setStatus(st) {
     this.F_CARRY = st & 1;
     // F_ZERO uses inverted encoding: 0 means Z is set (see reset())
     this.F_ZERO = ((st >> 1) & 1) === 1 ? 0 : 1;
@@ -1859,9 +1859,9 @@ CPU.prototype = {
     this.F_NOTUSED = (st >> 5) & 1;
     this.F_OVERFLOW = (st >> 6) & 1;
     this.F_SIGN = (st >> 7) & 1;
-  },
+  }
 
-  JSON_PROPERTIES: [
+  JSON_PROPERTIES = [
     "mem",
     "cyclesToHalt",
     "irqRequested",
@@ -1886,426 +1886,427 @@ CPU.prototype = {
     "F_NOTUSED_NEW",
     "F_BRK",
     "F_BRK_NEW",
-  ],
+  ];
 
-  toJSON: function () {
+  toJSON() {
     return utils.toJSON(this);
-  },
+  }
 
-  fromJSON: function (s) {
+  fromJSON(s) {
     utils.fromJSON(this, s);
-  },
-};
+  }
+}
 
 // Generates and provides an array of details about instructions
-const OpData = function () {
-  this.opdata = new Array(256);
-
-  // Set all to invalid instruction (to detect crashes):
-  for (let i = 0; i < 256; i++) this.opdata[i] = 0xff;
-
-  // Now fill in all valid opcodes:
-
-  // ADC:
-  this.setOp(this.INS_ADC, 0x69, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_ADC, 0x65, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_ADC, 0x75, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_ADC, 0x6d, this.ADDR_ABS, 3, 4);
-  this.setOp(this.INS_ADC, 0x7d, this.ADDR_ABSX, 3, 4);
-  this.setOp(this.INS_ADC, 0x79, this.ADDR_ABSY, 3, 4);
-  this.setOp(this.INS_ADC, 0x61, this.ADDR_PREIDXIND, 2, 6);
-  this.setOp(this.INS_ADC, 0x71, this.ADDR_POSTIDXIND, 2, 5);
-
-  // AND:
-  this.setOp(this.INS_AND, 0x29, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_AND, 0x25, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_AND, 0x35, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_AND, 0x2d, this.ADDR_ABS, 3, 4);
-  this.setOp(this.INS_AND, 0x3d, this.ADDR_ABSX, 3, 4);
-  this.setOp(this.INS_AND, 0x39, this.ADDR_ABSY, 3, 4);
-  this.setOp(this.INS_AND, 0x21, this.ADDR_PREIDXIND, 2, 6);
-  this.setOp(this.INS_AND, 0x31, this.ADDR_POSTIDXIND, 2, 5);
-
-  // ASL:
-  this.setOp(this.INS_ASL, 0x0a, this.ADDR_ACC, 1, 2);
-  this.setOp(this.INS_ASL, 0x06, this.ADDR_ZP, 2, 5);
-  this.setOp(this.INS_ASL, 0x16, this.ADDR_ZPX, 2, 6);
-  this.setOp(this.INS_ASL, 0x0e, this.ADDR_ABS, 3, 6);
-  this.setOp(this.INS_ASL, 0x1e, this.ADDR_ABSX, 3, 7);
-
-  // BCC:
-  this.setOp(this.INS_BCC, 0x90, this.ADDR_REL, 2, 2);
-
-  // BCS:
-  this.setOp(this.INS_BCS, 0xb0, this.ADDR_REL, 2, 2);
-
-  // BEQ:
-  this.setOp(this.INS_BEQ, 0xf0, this.ADDR_REL, 2, 2);
-
-  // BIT:
-  this.setOp(this.INS_BIT, 0x24, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_BIT, 0x2c, this.ADDR_ABS, 3, 4);
-
-  // BMI:
-  this.setOp(this.INS_BMI, 0x30, this.ADDR_REL, 2, 2);
-
-  // BNE:
-  this.setOp(this.INS_BNE, 0xd0, this.ADDR_REL, 2, 2);
-
-  // BPL:
-  this.setOp(this.INS_BPL, 0x10, this.ADDR_REL, 2, 2);
-
-  // BRK:
-  this.setOp(this.INS_BRK, 0x00, this.ADDR_IMP, 1, 7);
-
-  // BVC:
-  this.setOp(this.INS_BVC, 0x50, this.ADDR_REL, 2, 2);
-
-  // BVS:
-  this.setOp(this.INS_BVS, 0x70, this.ADDR_REL, 2, 2);
-
-  // CLC:
-  this.setOp(this.INS_CLC, 0x18, this.ADDR_IMP, 1, 2);
-
-  // CLD:
-  this.setOp(this.INS_CLD, 0xd8, this.ADDR_IMP, 1, 2);
-
-  // CLI:
-  this.setOp(this.INS_CLI, 0x58, this.ADDR_IMP, 1, 2);
-
-  // CLV:
-  this.setOp(this.INS_CLV, 0xb8, this.ADDR_IMP, 1, 2);
-
-  // CMP:
-  this.setOp(this.INS_CMP, 0xc9, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_CMP, 0xc5, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_CMP, 0xd5, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_CMP, 0xcd, this.ADDR_ABS, 3, 4);
-  this.setOp(this.INS_CMP, 0xdd, this.ADDR_ABSX, 3, 4);
-  this.setOp(this.INS_CMP, 0xd9, this.ADDR_ABSY, 3, 4);
-  this.setOp(this.INS_CMP, 0xc1, this.ADDR_PREIDXIND, 2, 6);
-  this.setOp(this.INS_CMP, 0xd1, this.ADDR_POSTIDXIND, 2, 5);
-
-  // CPX:
-  this.setOp(this.INS_CPX, 0xe0, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_CPX, 0xe4, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_CPX, 0xec, this.ADDR_ABS, 3, 4);
-
-  // CPY:
-  this.setOp(this.INS_CPY, 0xc0, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_CPY, 0xc4, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_CPY, 0xcc, this.ADDR_ABS, 3, 4);
-
-  // DEC:
-  this.setOp(this.INS_DEC, 0xc6, this.ADDR_ZP, 2, 5);
-  this.setOp(this.INS_DEC, 0xd6, this.ADDR_ZPX, 2, 6);
-  this.setOp(this.INS_DEC, 0xce, this.ADDR_ABS, 3, 6);
-  this.setOp(this.INS_DEC, 0xde, this.ADDR_ABSX, 3, 7);
-
-  // DEX:
-  this.setOp(this.INS_DEX, 0xca, this.ADDR_IMP, 1, 2);
-
-  // DEY:
-  this.setOp(this.INS_DEY, 0x88, this.ADDR_IMP, 1, 2);
-
-  // EOR:
-  this.setOp(this.INS_EOR, 0x49, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_EOR, 0x45, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_EOR, 0x55, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_EOR, 0x4d, this.ADDR_ABS, 3, 4);
-  this.setOp(this.INS_EOR, 0x5d, this.ADDR_ABSX, 3, 4);
-  this.setOp(this.INS_EOR, 0x59, this.ADDR_ABSY, 3, 4);
-  this.setOp(this.INS_EOR, 0x41, this.ADDR_PREIDXIND, 2, 6);
-  this.setOp(this.INS_EOR, 0x51, this.ADDR_POSTIDXIND, 2, 5);
-
-  // INC:
-  this.setOp(this.INS_INC, 0xe6, this.ADDR_ZP, 2, 5);
-  this.setOp(this.INS_INC, 0xf6, this.ADDR_ZPX, 2, 6);
-  this.setOp(this.INS_INC, 0xee, this.ADDR_ABS, 3, 6);
-  this.setOp(this.INS_INC, 0xfe, this.ADDR_ABSX, 3, 7);
-
-  // INX:
-  this.setOp(this.INS_INX, 0xe8, this.ADDR_IMP, 1, 2);
-
-  // INY:
-  this.setOp(this.INS_INY, 0xc8, this.ADDR_IMP, 1, 2);
-
-  // JMP:
-  this.setOp(this.INS_JMP, 0x4c, this.ADDR_ABS, 3, 3);
-  this.setOp(this.INS_JMP, 0x6c, this.ADDR_INDABS, 3, 5);
-
-  // JSR:
-  this.setOp(this.INS_JSR, 0x20, this.ADDR_ABS, 3, 6);
-
-  // LDA:
-  this.setOp(this.INS_LDA, 0xa9, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_LDA, 0xa5, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_LDA, 0xb5, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_LDA, 0xad, this.ADDR_ABS, 3, 4);
-  this.setOp(this.INS_LDA, 0xbd, this.ADDR_ABSX, 3, 4);
-  this.setOp(this.INS_LDA, 0xb9, this.ADDR_ABSY, 3, 4);
-  this.setOp(this.INS_LDA, 0xa1, this.ADDR_PREIDXIND, 2, 6);
-  this.setOp(this.INS_LDA, 0xb1, this.ADDR_POSTIDXIND, 2, 5);
-
-  // LDX:
-  this.setOp(this.INS_LDX, 0xa2, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_LDX, 0xa6, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_LDX, 0xb6, this.ADDR_ZPY, 2, 4);
-  this.setOp(this.INS_LDX, 0xae, this.ADDR_ABS, 3, 4);
-  this.setOp(this.INS_LDX, 0xbe, this.ADDR_ABSY, 3, 4);
-
-  // LDY:
-  this.setOp(this.INS_LDY, 0xa0, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_LDY, 0xa4, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_LDY, 0xb4, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_LDY, 0xac, this.ADDR_ABS, 3, 4);
-  this.setOp(this.INS_LDY, 0xbc, this.ADDR_ABSX, 3, 4);
-
-  // LSR:
-  this.setOp(this.INS_LSR, 0x4a, this.ADDR_ACC, 1, 2);
-  this.setOp(this.INS_LSR, 0x46, this.ADDR_ZP, 2, 5);
-  this.setOp(this.INS_LSR, 0x56, this.ADDR_ZPX, 2, 6);
-  this.setOp(this.INS_LSR, 0x4e, this.ADDR_ABS, 3, 6);
-  this.setOp(this.INS_LSR, 0x5e, this.ADDR_ABSX, 3, 7);
-
-  // NOP:
-  this.setOp(this.INS_NOP, 0x1a, this.ADDR_IMP, 1, 2);
-  this.setOp(this.INS_NOP, 0x3a, this.ADDR_IMP, 1, 2);
-  this.setOp(this.INS_NOP, 0x5a, this.ADDR_IMP, 1, 2);
-  this.setOp(this.INS_NOP, 0x7a, this.ADDR_IMP, 1, 2);
-  this.setOp(this.INS_NOP, 0xda, this.ADDR_IMP, 1, 2);
-  this.setOp(this.INS_NOP, 0xea, this.ADDR_IMP, 1, 2);
-  this.setOp(this.INS_NOP, 0xfa, this.ADDR_IMP, 1, 2);
-
-  // ORA:
-  this.setOp(this.INS_ORA, 0x09, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_ORA, 0x05, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_ORA, 0x15, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_ORA, 0x0d, this.ADDR_ABS, 3, 4);
-  this.setOp(this.INS_ORA, 0x1d, this.ADDR_ABSX, 3, 4);
-  this.setOp(this.INS_ORA, 0x19, this.ADDR_ABSY, 3, 4);
-  this.setOp(this.INS_ORA, 0x01, this.ADDR_PREIDXIND, 2, 6);
-  this.setOp(this.INS_ORA, 0x11, this.ADDR_POSTIDXIND, 2, 5);
-
-  // PHA:
-  this.setOp(this.INS_PHA, 0x48, this.ADDR_IMP, 1, 3);
-
-  // PHP:
-  this.setOp(this.INS_PHP, 0x08, this.ADDR_IMP, 1, 3);
-
-  // PLA:
-  this.setOp(this.INS_PLA, 0x68, this.ADDR_IMP, 1, 4);
-
-  // PLP:
-  this.setOp(this.INS_PLP, 0x28, this.ADDR_IMP, 1, 4);
-
-  // ROL:
-  this.setOp(this.INS_ROL, 0x2a, this.ADDR_ACC, 1, 2);
-  this.setOp(this.INS_ROL, 0x26, this.ADDR_ZP, 2, 5);
-  this.setOp(this.INS_ROL, 0x36, this.ADDR_ZPX, 2, 6);
-  this.setOp(this.INS_ROL, 0x2e, this.ADDR_ABS, 3, 6);
-  this.setOp(this.INS_ROL, 0x3e, this.ADDR_ABSX, 3, 7);
-
-  // ROR:
-  this.setOp(this.INS_ROR, 0x6a, this.ADDR_ACC, 1, 2);
-  this.setOp(this.INS_ROR, 0x66, this.ADDR_ZP, 2, 5);
-  this.setOp(this.INS_ROR, 0x76, this.ADDR_ZPX, 2, 6);
-  this.setOp(this.INS_ROR, 0x6e, this.ADDR_ABS, 3, 6);
-  this.setOp(this.INS_ROR, 0x7e, this.ADDR_ABSX, 3, 7);
-
-  // RTI:
-  this.setOp(this.INS_RTI, 0x40, this.ADDR_IMP, 1, 6);
-
-  // RTS:
-  this.setOp(this.INS_RTS, 0x60, this.ADDR_IMP, 1, 6);
-
-  // SBC:
-  this.setOp(this.INS_SBC, 0xe9, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_SBC, 0xeb, this.ADDR_IMM, 2, 2); // unofficial alternate
-  this.setOp(this.INS_SBC, 0xe5, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_SBC, 0xf5, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_SBC, 0xed, this.ADDR_ABS, 3, 4);
-  this.setOp(this.INS_SBC, 0xfd, this.ADDR_ABSX, 3, 4);
-  this.setOp(this.INS_SBC, 0xf9, this.ADDR_ABSY, 3, 4);
-  this.setOp(this.INS_SBC, 0xe1, this.ADDR_PREIDXIND, 2, 6);
-  this.setOp(this.INS_SBC, 0xf1, this.ADDR_POSTIDXIND, 2, 5);
-
-  // SEC:
-  this.setOp(this.INS_SEC, 0x38, this.ADDR_IMP, 1, 2);
-
-  // SED:
-  this.setOp(this.INS_SED, 0xf8, this.ADDR_IMP, 1, 2);
-
-  // SEI:
-  this.setOp(this.INS_SEI, 0x78, this.ADDR_IMP, 1, 2);
-
-  // STA:
-  this.setOp(this.INS_STA, 0x85, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_STA, 0x95, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_STA, 0x8d, this.ADDR_ABS, 3, 4);
-  this.setOp(this.INS_STA, 0x9d, this.ADDR_ABSX, 3, 5);
-  this.setOp(this.INS_STA, 0x99, this.ADDR_ABSY, 3, 5);
-  this.setOp(this.INS_STA, 0x81, this.ADDR_PREIDXIND, 2, 6);
-  this.setOp(this.INS_STA, 0x91, this.ADDR_POSTIDXIND, 2, 6);
-
-  // STX:
-  this.setOp(this.INS_STX, 0x86, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_STX, 0x96, this.ADDR_ZPY, 2, 4);
-  this.setOp(this.INS_STX, 0x8e, this.ADDR_ABS, 3, 4);
-
-  // STY:
-  this.setOp(this.INS_STY, 0x84, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_STY, 0x94, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_STY, 0x8c, this.ADDR_ABS, 3, 4);
-
-  // TAX:
-  this.setOp(this.INS_TAX, 0xaa, this.ADDR_IMP, 1, 2);
-
-  // TAY:
-  this.setOp(this.INS_TAY, 0xa8, this.ADDR_IMP, 1, 2);
-
-  // TSX:
-  this.setOp(this.INS_TSX, 0xba, this.ADDR_IMP, 1, 2);
-
-  // TXA:
-  this.setOp(this.INS_TXA, 0x8a, this.ADDR_IMP, 1, 2);
-
-  // TXS:
-  this.setOp(this.INS_TXS, 0x9a, this.ADDR_IMP, 1, 2);
-
-  // TYA:
-  this.setOp(this.INS_TYA, 0x98, this.ADDR_IMP, 1, 2);
-
-  // ALR:
-  this.setOp(this.INS_ALR, 0x4b, this.ADDR_IMM, 2, 2);
-
-  // ANC:
-  this.setOp(this.INS_ANC, 0x0b, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_ANC, 0x2b, this.ADDR_IMM, 2, 2);
-
-  // ARR:
-  this.setOp(this.INS_ARR, 0x6b, this.ADDR_IMM, 2, 2);
-
-  // AXS:
-  this.setOp(this.INS_AXS, 0xcb, this.ADDR_IMM, 2, 2);
-
-  // LAX:
-  this.setOp(this.INS_LAX, 0xa3, this.ADDR_PREIDXIND, 2, 6);
-  this.setOp(this.INS_LAX, 0xa7, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_LAX, 0xaf, this.ADDR_ABS, 3, 4);
-  this.setOp(this.INS_LAX, 0xb3, this.ADDR_POSTIDXIND, 2, 5);
-  this.setOp(this.INS_LAX, 0xb7, this.ADDR_ZPY, 2, 4);
-  this.setOp(this.INS_LAX, 0xbf, this.ADDR_ABSY, 3, 4);
-
-  // SAX:
-  this.setOp(this.INS_SAX, 0x83, this.ADDR_PREIDXIND, 2, 6);
-  this.setOp(this.INS_SAX, 0x87, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_SAX, 0x8f, this.ADDR_ABS, 3, 4);
-  this.setOp(this.INS_SAX, 0x97, this.ADDR_ZPY, 2, 4);
-
-  // DCP:
-  this.setOp(this.INS_DCP, 0xc3, this.ADDR_PREIDXIND, 2, 8);
-  this.setOp(this.INS_DCP, 0xc7, this.ADDR_ZP, 2, 5);
-  this.setOp(this.INS_DCP, 0xcf, this.ADDR_ABS, 3, 6);
-  this.setOp(this.INS_DCP, 0xd3, this.ADDR_POSTIDXIND, 2, 8);
-  this.setOp(this.INS_DCP, 0xd7, this.ADDR_ZPX, 2, 6);
-  this.setOp(this.INS_DCP, 0xdb, this.ADDR_ABSY, 3, 7);
-  this.setOp(this.INS_DCP, 0xdf, this.ADDR_ABSX, 3, 7);
-
-  // ISC:
-  this.setOp(this.INS_ISC, 0xe3, this.ADDR_PREIDXIND, 2, 8);
-  this.setOp(this.INS_ISC, 0xe7, this.ADDR_ZP, 2, 5);
-  this.setOp(this.INS_ISC, 0xef, this.ADDR_ABS, 3, 6);
-  this.setOp(this.INS_ISC, 0xf3, this.ADDR_POSTIDXIND, 2, 8);
-  this.setOp(this.INS_ISC, 0xf7, this.ADDR_ZPX, 2, 6);
-  this.setOp(this.INS_ISC, 0xfb, this.ADDR_ABSY, 3, 7);
-  this.setOp(this.INS_ISC, 0xff, this.ADDR_ABSX, 3, 7);
-
-  // RLA:
-  this.setOp(this.INS_RLA, 0x23, this.ADDR_PREIDXIND, 2, 8);
-  this.setOp(this.INS_RLA, 0x27, this.ADDR_ZP, 2, 5);
-  this.setOp(this.INS_RLA, 0x2f, this.ADDR_ABS, 3, 6);
-  this.setOp(this.INS_RLA, 0x33, this.ADDR_POSTIDXIND, 2, 8);
-  this.setOp(this.INS_RLA, 0x37, this.ADDR_ZPX, 2, 6);
-  this.setOp(this.INS_RLA, 0x3b, this.ADDR_ABSY, 3, 7);
-  this.setOp(this.INS_RLA, 0x3f, this.ADDR_ABSX, 3, 7);
-
-  // RRA:
-  this.setOp(this.INS_RRA, 0x63, this.ADDR_PREIDXIND, 2, 8);
-  this.setOp(this.INS_RRA, 0x67, this.ADDR_ZP, 2, 5);
-  this.setOp(this.INS_RRA, 0x6f, this.ADDR_ABS, 3, 6);
-  this.setOp(this.INS_RRA, 0x73, this.ADDR_POSTIDXIND, 2, 8);
-  this.setOp(this.INS_RRA, 0x77, this.ADDR_ZPX, 2, 6);
-  this.setOp(this.INS_RRA, 0x7b, this.ADDR_ABSY, 3, 7);
-  this.setOp(this.INS_RRA, 0x7f, this.ADDR_ABSX, 3, 7);
-
-  // SLO:
-  this.setOp(this.INS_SLO, 0x03, this.ADDR_PREIDXIND, 2, 8);
-  this.setOp(this.INS_SLO, 0x07, this.ADDR_ZP, 2, 5);
-  this.setOp(this.INS_SLO, 0x0f, this.ADDR_ABS, 3, 6);
-  this.setOp(this.INS_SLO, 0x13, this.ADDR_POSTIDXIND, 2, 8);
-  this.setOp(this.INS_SLO, 0x17, this.ADDR_ZPX, 2, 6);
-  this.setOp(this.INS_SLO, 0x1b, this.ADDR_ABSY, 3, 7);
-  this.setOp(this.INS_SLO, 0x1f, this.ADDR_ABSX, 3, 7);
-
-  // SRE:
-  this.setOp(this.INS_SRE, 0x43, this.ADDR_PREIDXIND, 2, 8);
-  this.setOp(this.INS_SRE, 0x47, this.ADDR_ZP, 2, 5);
-  this.setOp(this.INS_SRE, 0x4f, this.ADDR_ABS, 3, 6);
-  this.setOp(this.INS_SRE, 0x53, this.ADDR_POSTIDXIND, 2, 8);
-  this.setOp(this.INS_SRE, 0x57, this.ADDR_ZPX, 2, 6);
-  this.setOp(this.INS_SRE, 0x5b, this.ADDR_ABSY, 3, 7);
-  this.setOp(this.INS_SRE, 0x5f, this.ADDR_ABSX, 3, 7);
-
-  // SKB:
-  this.setOp(this.INS_SKB, 0x80, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_SKB, 0x82, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_SKB, 0x89, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_SKB, 0xc2, this.ADDR_IMM, 2, 2);
-  this.setOp(this.INS_SKB, 0xe2, this.ADDR_IMM, 2, 2);
-
-  // SKB:
-  this.setOp(this.INS_IGN, 0x0c, this.ADDR_ABS, 3, 4);
-  this.setOp(this.INS_IGN, 0x1c, this.ADDR_ABSX, 3, 4);
-  this.setOp(this.INS_IGN, 0x3c, this.ADDR_ABSX, 3, 4);
-  this.setOp(this.INS_IGN, 0x5c, this.ADDR_ABSX, 3, 4);
-  this.setOp(this.INS_IGN, 0x7c, this.ADDR_ABSX, 3, 4);
-  this.setOp(this.INS_IGN, 0xdc, this.ADDR_ABSX, 3, 4);
-  this.setOp(this.INS_IGN, 0xfc, this.ADDR_ABSX, 3, 4);
-  this.setOp(this.INS_IGN, 0x04, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_IGN, 0x44, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_IGN, 0x64, this.ADDR_ZP, 2, 3);
-  this.setOp(this.INS_IGN, 0x14, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_IGN, 0x34, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_IGN, 0x54, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_IGN, 0x74, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_IGN, 0xd4, this.ADDR_ZPX, 2, 4);
-  this.setOp(this.INS_IGN, 0xf4, this.ADDR_ZPX, 2, 4);
-
-  // SHA (AHX): Store A AND X AND (H+1)
-  this.setOp(this.INS_SHA, 0x93, this.ADDR_POSTIDXIND, 2, 6);
-  this.setOp(this.INS_SHA, 0x9f, this.ADDR_ABSY, 3, 5);
-
-  // SHS (TAS): SP = A AND X, store SP AND (H+1)
-  this.setOp(this.INS_SHS, 0x9b, this.ADDR_ABSY, 3, 5);
-
-  // SHY (SYA): Store Y AND (H+1)
-  this.setOp(this.INS_SHY, 0x9c, this.ADDR_ABSX, 3, 5);
-
-  // SHX (SXA): Store X AND (H+1)
-  this.setOp(this.INS_SHX, 0x9e, this.ADDR_ABSY, 3, 5);
-
-  // LAE (LAS): A = X = SP = M AND SP
-  this.setOp(this.INS_LAE, 0xbb, this.ADDR_ABSY, 3, 4);
-
-  // ANE (XAA): A = (A | MAGIC) & X & Immediate
-  this.setOp(this.INS_ANE, 0x8b, this.ADDR_IMM, 2, 2);
-
-  // LXA (LAX immediate): A = X = (A | MAGIC) & Immediate
-  this.setOp(this.INS_LXA, 0xab, this.ADDR_IMM, 2, 2);
-
-  // prettier-ignore
-  this.cycTable = new Array(
+class OpData {
+  constructor() {
+    this.opdata = new Array(256);
+
+    // Set all to invalid instruction (to detect crashes):
+    for (let i = 0; i < 256; i++) this.opdata[i] = 0xff;
+
+    // Now fill in all valid opcodes:
+
+    // ADC:
+    this.setOp(this.INS_ADC, 0x69, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_ADC, 0x65, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_ADC, 0x75, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_ADC, 0x6d, this.ADDR_ABS, 3, 4);
+    this.setOp(this.INS_ADC, 0x7d, this.ADDR_ABSX, 3, 4);
+    this.setOp(this.INS_ADC, 0x79, this.ADDR_ABSY, 3, 4);
+    this.setOp(this.INS_ADC, 0x61, this.ADDR_PREIDXIND, 2, 6);
+    this.setOp(this.INS_ADC, 0x71, this.ADDR_POSTIDXIND, 2, 5);
+
+    // AND:
+    this.setOp(this.INS_AND, 0x29, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_AND, 0x25, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_AND, 0x35, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_AND, 0x2d, this.ADDR_ABS, 3, 4);
+    this.setOp(this.INS_AND, 0x3d, this.ADDR_ABSX, 3, 4);
+    this.setOp(this.INS_AND, 0x39, this.ADDR_ABSY, 3, 4);
+    this.setOp(this.INS_AND, 0x21, this.ADDR_PREIDXIND, 2, 6);
+    this.setOp(this.INS_AND, 0x31, this.ADDR_POSTIDXIND, 2, 5);
+
+    // ASL:
+    this.setOp(this.INS_ASL, 0x0a, this.ADDR_ACC, 1, 2);
+    this.setOp(this.INS_ASL, 0x06, this.ADDR_ZP, 2, 5);
+    this.setOp(this.INS_ASL, 0x16, this.ADDR_ZPX, 2, 6);
+    this.setOp(this.INS_ASL, 0x0e, this.ADDR_ABS, 3, 6);
+    this.setOp(this.INS_ASL, 0x1e, this.ADDR_ABSX, 3, 7);
+
+    // BCC:
+    this.setOp(this.INS_BCC, 0x90, this.ADDR_REL, 2, 2);
+
+    // BCS:
+    this.setOp(this.INS_BCS, 0xb0, this.ADDR_REL, 2, 2);
+
+    // BEQ:
+    this.setOp(this.INS_BEQ, 0xf0, this.ADDR_REL, 2, 2);
+
+    // BIT:
+    this.setOp(this.INS_BIT, 0x24, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_BIT, 0x2c, this.ADDR_ABS, 3, 4);
+
+    // BMI:
+    this.setOp(this.INS_BMI, 0x30, this.ADDR_REL, 2, 2);
+
+    // BNE:
+    this.setOp(this.INS_BNE, 0xd0, this.ADDR_REL, 2, 2);
+
+    // BPL:
+    this.setOp(this.INS_BPL, 0x10, this.ADDR_REL, 2, 2);
+
+    // BRK:
+    this.setOp(this.INS_BRK, 0x00, this.ADDR_IMP, 1, 7);
+
+    // BVC:
+    this.setOp(this.INS_BVC, 0x50, this.ADDR_REL, 2, 2);
+
+    // BVS:
+    this.setOp(this.INS_BVS, 0x70, this.ADDR_REL, 2, 2);
+
+    // CLC:
+    this.setOp(this.INS_CLC, 0x18, this.ADDR_IMP, 1, 2);
+
+    // CLD:
+    this.setOp(this.INS_CLD, 0xd8, this.ADDR_IMP, 1, 2);
+
+    // CLI:
+    this.setOp(this.INS_CLI, 0x58, this.ADDR_IMP, 1, 2);
+
+    // CLV:
+    this.setOp(this.INS_CLV, 0xb8, this.ADDR_IMP, 1, 2);
+
+    // CMP:
+    this.setOp(this.INS_CMP, 0xc9, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_CMP, 0xc5, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_CMP, 0xd5, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_CMP, 0xcd, this.ADDR_ABS, 3, 4);
+    this.setOp(this.INS_CMP, 0xdd, this.ADDR_ABSX, 3, 4);
+    this.setOp(this.INS_CMP, 0xd9, this.ADDR_ABSY, 3, 4);
+    this.setOp(this.INS_CMP, 0xc1, this.ADDR_PREIDXIND, 2, 6);
+    this.setOp(this.INS_CMP, 0xd1, this.ADDR_POSTIDXIND, 2, 5);
+
+    // CPX:
+    this.setOp(this.INS_CPX, 0xe0, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_CPX, 0xe4, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_CPX, 0xec, this.ADDR_ABS, 3, 4);
+
+    // CPY:
+    this.setOp(this.INS_CPY, 0xc0, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_CPY, 0xc4, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_CPY, 0xcc, this.ADDR_ABS, 3, 4);
+
+    // DEC:
+    this.setOp(this.INS_DEC, 0xc6, this.ADDR_ZP, 2, 5);
+    this.setOp(this.INS_DEC, 0xd6, this.ADDR_ZPX, 2, 6);
+    this.setOp(this.INS_DEC, 0xce, this.ADDR_ABS, 3, 6);
+    this.setOp(this.INS_DEC, 0xde, this.ADDR_ABSX, 3, 7);
+
+    // DEX:
+    this.setOp(this.INS_DEX, 0xca, this.ADDR_IMP, 1, 2);
+
+    // DEY:
+    this.setOp(this.INS_DEY, 0x88, this.ADDR_IMP, 1, 2);
+
+    // EOR:
+    this.setOp(this.INS_EOR, 0x49, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_EOR, 0x45, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_EOR, 0x55, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_EOR, 0x4d, this.ADDR_ABS, 3, 4);
+    this.setOp(this.INS_EOR, 0x5d, this.ADDR_ABSX, 3, 4);
+    this.setOp(this.INS_EOR, 0x59, this.ADDR_ABSY, 3, 4);
+    this.setOp(this.INS_EOR, 0x41, this.ADDR_PREIDXIND, 2, 6);
+    this.setOp(this.INS_EOR, 0x51, this.ADDR_POSTIDXIND, 2, 5);
+
+    // INC:
+    this.setOp(this.INS_INC, 0xe6, this.ADDR_ZP, 2, 5);
+    this.setOp(this.INS_INC, 0xf6, this.ADDR_ZPX, 2, 6);
+    this.setOp(this.INS_INC, 0xee, this.ADDR_ABS, 3, 6);
+    this.setOp(this.INS_INC, 0xfe, this.ADDR_ABSX, 3, 7);
+
+    // INX:
+    this.setOp(this.INS_INX, 0xe8, this.ADDR_IMP, 1, 2);
+
+    // INY:
+    this.setOp(this.INS_INY, 0xc8, this.ADDR_IMP, 1, 2);
+
+    // JMP:
+    this.setOp(this.INS_JMP, 0x4c, this.ADDR_ABS, 3, 3);
+    this.setOp(this.INS_JMP, 0x6c, this.ADDR_INDABS, 3, 5);
+
+    // JSR:
+    this.setOp(this.INS_JSR, 0x20, this.ADDR_ABS, 3, 6);
+
+    // LDA:
+    this.setOp(this.INS_LDA, 0xa9, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_LDA, 0xa5, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_LDA, 0xb5, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_LDA, 0xad, this.ADDR_ABS, 3, 4);
+    this.setOp(this.INS_LDA, 0xbd, this.ADDR_ABSX, 3, 4);
+    this.setOp(this.INS_LDA, 0xb9, this.ADDR_ABSY, 3, 4);
+    this.setOp(this.INS_LDA, 0xa1, this.ADDR_PREIDXIND, 2, 6);
+    this.setOp(this.INS_LDA, 0xb1, this.ADDR_POSTIDXIND, 2, 5);
+
+    // LDX:
+    this.setOp(this.INS_LDX, 0xa2, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_LDX, 0xa6, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_LDX, 0xb6, this.ADDR_ZPY, 2, 4);
+    this.setOp(this.INS_LDX, 0xae, this.ADDR_ABS, 3, 4);
+    this.setOp(this.INS_LDX, 0xbe, this.ADDR_ABSY, 3, 4);
+
+    // LDY:
+    this.setOp(this.INS_LDY, 0xa0, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_LDY, 0xa4, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_LDY, 0xb4, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_LDY, 0xac, this.ADDR_ABS, 3, 4);
+    this.setOp(this.INS_LDY, 0xbc, this.ADDR_ABSX, 3, 4);
+
+    // LSR:
+    this.setOp(this.INS_LSR, 0x4a, this.ADDR_ACC, 1, 2);
+    this.setOp(this.INS_LSR, 0x46, this.ADDR_ZP, 2, 5);
+    this.setOp(this.INS_LSR, 0x56, this.ADDR_ZPX, 2, 6);
+    this.setOp(this.INS_LSR, 0x4e, this.ADDR_ABS, 3, 6);
+    this.setOp(this.INS_LSR, 0x5e, this.ADDR_ABSX, 3, 7);
+
+    // NOP:
+    this.setOp(this.INS_NOP, 0x1a, this.ADDR_IMP, 1, 2);
+    this.setOp(this.INS_NOP, 0x3a, this.ADDR_IMP, 1, 2);
+    this.setOp(this.INS_NOP, 0x5a, this.ADDR_IMP, 1, 2);
+    this.setOp(this.INS_NOP, 0x7a, this.ADDR_IMP, 1, 2);
+    this.setOp(this.INS_NOP, 0xda, this.ADDR_IMP, 1, 2);
+    this.setOp(this.INS_NOP, 0xea, this.ADDR_IMP, 1, 2);
+    this.setOp(this.INS_NOP, 0xfa, this.ADDR_IMP, 1, 2);
+
+    // ORA:
+    this.setOp(this.INS_ORA, 0x09, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_ORA, 0x05, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_ORA, 0x15, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_ORA, 0x0d, this.ADDR_ABS, 3, 4);
+    this.setOp(this.INS_ORA, 0x1d, this.ADDR_ABSX, 3, 4);
+    this.setOp(this.INS_ORA, 0x19, this.ADDR_ABSY, 3, 4);
+    this.setOp(this.INS_ORA, 0x01, this.ADDR_PREIDXIND, 2, 6);
+    this.setOp(this.INS_ORA, 0x11, this.ADDR_POSTIDXIND, 2, 5);
+
+    // PHA:
+    this.setOp(this.INS_PHA, 0x48, this.ADDR_IMP, 1, 3);
+
+    // PHP:
+    this.setOp(this.INS_PHP, 0x08, this.ADDR_IMP, 1, 3);
+
+    // PLA:
+    this.setOp(this.INS_PLA, 0x68, this.ADDR_IMP, 1, 4);
+
+    // PLP:
+    this.setOp(this.INS_PLP, 0x28, this.ADDR_IMP, 1, 4);
+
+    // ROL:
+    this.setOp(this.INS_ROL, 0x2a, this.ADDR_ACC, 1, 2);
+    this.setOp(this.INS_ROL, 0x26, this.ADDR_ZP, 2, 5);
+    this.setOp(this.INS_ROL, 0x36, this.ADDR_ZPX, 2, 6);
+    this.setOp(this.INS_ROL, 0x2e, this.ADDR_ABS, 3, 6);
+    this.setOp(this.INS_ROL, 0x3e, this.ADDR_ABSX, 3, 7);
+
+    // ROR:
+    this.setOp(this.INS_ROR, 0x6a, this.ADDR_ACC, 1, 2);
+    this.setOp(this.INS_ROR, 0x66, this.ADDR_ZP, 2, 5);
+    this.setOp(this.INS_ROR, 0x76, this.ADDR_ZPX, 2, 6);
+    this.setOp(this.INS_ROR, 0x6e, this.ADDR_ABS, 3, 6);
+    this.setOp(this.INS_ROR, 0x7e, this.ADDR_ABSX, 3, 7);
+
+    // RTI:
+    this.setOp(this.INS_RTI, 0x40, this.ADDR_IMP, 1, 6);
+
+    // RTS:
+    this.setOp(this.INS_RTS, 0x60, this.ADDR_IMP, 1, 6);
+
+    // SBC:
+    this.setOp(this.INS_SBC, 0xe9, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_SBC, 0xeb, this.ADDR_IMM, 2, 2); // unofficial alternate
+    this.setOp(this.INS_SBC, 0xe5, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_SBC, 0xf5, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_SBC, 0xed, this.ADDR_ABS, 3, 4);
+    this.setOp(this.INS_SBC, 0xfd, this.ADDR_ABSX, 3, 4);
+    this.setOp(this.INS_SBC, 0xf9, this.ADDR_ABSY, 3, 4);
+    this.setOp(this.INS_SBC, 0xe1, this.ADDR_PREIDXIND, 2, 6);
+    this.setOp(this.INS_SBC, 0xf1, this.ADDR_POSTIDXIND, 2, 5);
+
+    // SEC:
+    this.setOp(this.INS_SEC, 0x38, this.ADDR_IMP, 1, 2);
+
+    // SED:
+    this.setOp(this.INS_SED, 0xf8, this.ADDR_IMP, 1, 2);
+
+    // SEI:
+    this.setOp(this.INS_SEI, 0x78, this.ADDR_IMP, 1, 2);
+
+    // STA:
+    this.setOp(this.INS_STA, 0x85, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_STA, 0x95, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_STA, 0x8d, this.ADDR_ABS, 3, 4);
+    this.setOp(this.INS_STA, 0x9d, this.ADDR_ABSX, 3, 5);
+    this.setOp(this.INS_STA, 0x99, this.ADDR_ABSY, 3, 5);
+    this.setOp(this.INS_STA, 0x81, this.ADDR_PREIDXIND, 2, 6);
+    this.setOp(this.INS_STA, 0x91, this.ADDR_POSTIDXIND, 2, 6);
+
+    // STX:
+    this.setOp(this.INS_STX, 0x86, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_STX, 0x96, this.ADDR_ZPY, 2, 4);
+    this.setOp(this.INS_STX, 0x8e, this.ADDR_ABS, 3, 4);
+
+    // STY:
+    this.setOp(this.INS_STY, 0x84, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_STY, 0x94, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_STY, 0x8c, this.ADDR_ABS, 3, 4);
+
+    // TAX:
+    this.setOp(this.INS_TAX, 0xaa, this.ADDR_IMP, 1, 2);
+
+    // TAY:
+    this.setOp(this.INS_TAY, 0xa8, this.ADDR_IMP, 1, 2);
+
+    // TSX:
+    this.setOp(this.INS_TSX, 0xba, this.ADDR_IMP, 1, 2);
+
+    // TXA:
+    this.setOp(this.INS_TXA, 0x8a, this.ADDR_IMP, 1, 2);
+
+    // TXS:
+    this.setOp(this.INS_TXS, 0x9a, this.ADDR_IMP, 1, 2);
+
+    // TYA:
+    this.setOp(this.INS_TYA, 0x98, this.ADDR_IMP, 1, 2);
+
+    // ALR:
+    this.setOp(this.INS_ALR, 0x4b, this.ADDR_IMM, 2, 2);
+
+    // ANC:
+    this.setOp(this.INS_ANC, 0x0b, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_ANC, 0x2b, this.ADDR_IMM, 2, 2);
+
+    // ARR:
+    this.setOp(this.INS_ARR, 0x6b, this.ADDR_IMM, 2, 2);
+
+    // AXS:
+    this.setOp(this.INS_AXS, 0xcb, this.ADDR_IMM, 2, 2);
+
+    // LAX:
+    this.setOp(this.INS_LAX, 0xa3, this.ADDR_PREIDXIND, 2, 6);
+    this.setOp(this.INS_LAX, 0xa7, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_LAX, 0xaf, this.ADDR_ABS, 3, 4);
+    this.setOp(this.INS_LAX, 0xb3, this.ADDR_POSTIDXIND, 2, 5);
+    this.setOp(this.INS_LAX, 0xb7, this.ADDR_ZPY, 2, 4);
+    this.setOp(this.INS_LAX, 0xbf, this.ADDR_ABSY, 3, 4);
+
+    // SAX:
+    this.setOp(this.INS_SAX, 0x83, this.ADDR_PREIDXIND, 2, 6);
+    this.setOp(this.INS_SAX, 0x87, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_SAX, 0x8f, this.ADDR_ABS, 3, 4);
+    this.setOp(this.INS_SAX, 0x97, this.ADDR_ZPY, 2, 4);
+
+    // DCP:
+    this.setOp(this.INS_DCP, 0xc3, this.ADDR_PREIDXIND, 2, 8);
+    this.setOp(this.INS_DCP, 0xc7, this.ADDR_ZP, 2, 5);
+    this.setOp(this.INS_DCP, 0xcf, this.ADDR_ABS, 3, 6);
+    this.setOp(this.INS_DCP, 0xd3, this.ADDR_POSTIDXIND, 2, 8);
+    this.setOp(this.INS_DCP, 0xd7, this.ADDR_ZPX, 2, 6);
+    this.setOp(this.INS_DCP, 0xdb, this.ADDR_ABSY, 3, 7);
+    this.setOp(this.INS_DCP, 0xdf, this.ADDR_ABSX, 3, 7);
+
+    // ISC:
+    this.setOp(this.INS_ISC, 0xe3, this.ADDR_PREIDXIND, 2, 8);
+    this.setOp(this.INS_ISC, 0xe7, this.ADDR_ZP, 2, 5);
+    this.setOp(this.INS_ISC, 0xef, this.ADDR_ABS, 3, 6);
+    this.setOp(this.INS_ISC, 0xf3, this.ADDR_POSTIDXIND, 2, 8);
+    this.setOp(this.INS_ISC, 0xf7, this.ADDR_ZPX, 2, 6);
+    this.setOp(this.INS_ISC, 0xfb, this.ADDR_ABSY, 3, 7);
+    this.setOp(this.INS_ISC, 0xff, this.ADDR_ABSX, 3, 7);
+
+    // RLA:
+    this.setOp(this.INS_RLA, 0x23, this.ADDR_PREIDXIND, 2, 8);
+    this.setOp(this.INS_RLA, 0x27, this.ADDR_ZP, 2, 5);
+    this.setOp(this.INS_RLA, 0x2f, this.ADDR_ABS, 3, 6);
+    this.setOp(this.INS_RLA, 0x33, this.ADDR_POSTIDXIND, 2, 8);
+    this.setOp(this.INS_RLA, 0x37, this.ADDR_ZPX, 2, 6);
+    this.setOp(this.INS_RLA, 0x3b, this.ADDR_ABSY, 3, 7);
+    this.setOp(this.INS_RLA, 0x3f, this.ADDR_ABSX, 3, 7);
+
+    // RRA:
+    this.setOp(this.INS_RRA, 0x63, this.ADDR_PREIDXIND, 2, 8);
+    this.setOp(this.INS_RRA, 0x67, this.ADDR_ZP, 2, 5);
+    this.setOp(this.INS_RRA, 0x6f, this.ADDR_ABS, 3, 6);
+    this.setOp(this.INS_RRA, 0x73, this.ADDR_POSTIDXIND, 2, 8);
+    this.setOp(this.INS_RRA, 0x77, this.ADDR_ZPX, 2, 6);
+    this.setOp(this.INS_RRA, 0x7b, this.ADDR_ABSY, 3, 7);
+    this.setOp(this.INS_RRA, 0x7f, this.ADDR_ABSX, 3, 7);
+
+    // SLO:
+    this.setOp(this.INS_SLO, 0x03, this.ADDR_PREIDXIND, 2, 8);
+    this.setOp(this.INS_SLO, 0x07, this.ADDR_ZP, 2, 5);
+    this.setOp(this.INS_SLO, 0x0f, this.ADDR_ABS, 3, 6);
+    this.setOp(this.INS_SLO, 0x13, this.ADDR_POSTIDXIND, 2, 8);
+    this.setOp(this.INS_SLO, 0x17, this.ADDR_ZPX, 2, 6);
+    this.setOp(this.INS_SLO, 0x1b, this.ADDR_ABSY, 3, 7);
+    this.setOp(this.INS_SLO, 0x1f, this.ADDR_ABSX, 3, 7);
+
+    // SRE:
+    this.setOp(this.INS_SRE, 0x43, this.ADDR_PREIDXIND, 2, 8);
+    this.setOp(this.INS_SRE, 0x47, this.ADDR_ZP, 2, 5);
+    this.setOp(this.INS_SRE, 0x4f, this.ADDR_ABS, 3, 6);
+    this.setOp(this.INS_SRE, 0x53, this.ADDR_POSTIDXIND, 2, 8);
+    this.setOp(this.INS_SRE, 0x57, this.ADDR_ZPX, 2, 6);
+    this.setOp(this.INS_SRE, 0x5b, this.ADDR_ABSY, 3, 7);
+    this.setOp(this.INS_SRE, 0x5f, this.ADDR_ABSX, 3, 7);
+
+    // SKB:
+    this.setOp(this.INS_SKB, 0x80, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_SKB, 0x82, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_SKB, 0x89, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_SKB, 0xc2, this.ADDR_IMM, 2, 2);
+    this.setOp(this.INS_SKB, 0xe2, this.ADDR_IMM, 2, 2);
+
+    // SKB:
+    this.setOp(this.INS_IGN, 0x0c, this.ADDR_ABS, 3, 4);
+    this.setOp(this.INS_IGN, 0x1c, this.ADDR_ABSX, 3, 4);
+    this.setOp(this.INS_IGN, 0x3c, this.ADDR_ABSX, 3, 4);
+    this.setOp(this.INS_IGN, 0x5c, this.ADDR_ABSX, 3, 4);
+    this.setOp(this.INS_IGN, 0x7c, this.ADDR_ABSX, 3, 4);
+    this.setOp(this.INS_IGN, 0xdc, this.ADDR_ABSX, 3, 4);
+    this.setOp(this.INS_IGN, 0xfc, this.ADDR_ABSX, 3, 4);
+    this.setOp(this.INS_IGN, 0x04, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_IGN, 0x44, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_IGN, 0x64, this.ADDR_ZP, 2, 3);
+    this.setOp(this.INS_IGN, 0x14, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_IGN, 0x34, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_IGN, 0x54, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_IGN, 0x74, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_IGN, 0xd4, this.ADDR_ZPX, 2, 4);
+    this.setOp(this.INS_IGN, 0xf4, this.ADDR_ZPX, 2, 4);
+
+    // SHA (AHX): Store A AND X AND (H+1)
+    this.setOp(this.INS_SHA, 0x93, this.ADDR_POSTIDXIND, 2, 6);
+    this.setOp(this.INS_SHA, 0x9f, this.ADDR_ABSY, 3, 5);
+
+    // SHS (TAS): SP = A AND X, store SP AND (H+1)
+    this.setOp(this.INS_SHS, 0x9b, this.ADDR_ABSY, 3, 5);
+
+    // SHY (SYA): Store Y AND (H+1)
+    this.setOp(this.INS_SHY, 0x9c, this.ADDR_ABSX, 3, 5);
+
+    // SHX (SXA): Store X AND (H+1)
+    this.setOp(this.INS_SHX, 0x9e, this.ADDR_ABSY, 3, 5);
+
+    // LAE (LAS): A = X = SP = M AND SP
+    this.setOp(this.INS_LAE, 0xbb, this.ADDR_ABSY, 3, 4);
+
+    // ANE (XAA): A = (A | MAGIC) & X & Immediate
+    this.setOp(this.INS_ANE, 0x8b, this.ADDR_IMM, 2, 2);
+
+    // LXA (LAX immediate): A = X = (A | MAGIC) & Immediate
+    this.setOp(this.INS_LXA, 0xab, this.ADDR_IMM, 2, 2);
+
+    // prettier-ignore
+    this.cycTable = new Array(
     /*0x00*/ 7,6,2,8,3,3,5,5,3,2,2,2,4,4,6,6,
     /*0x10*/ 2,5,2,8,4,4,6,6,2,4,2,7,4,4,7,7,
     /*0x20*/ 6,6,2,8,3,3,5,5,4,2,2,2,4,4,6,6,
@@ -2324,232 +2325,231 @@ const OpData = function () {
     /*0xF0*/ 2,5,2,8,4,4,6,6,2,4,2,7,4,4,7,7
   );
 
-  this.instname = new Array(78);
+    this.instname = new Array(78);
 
-  // Instruction Names:
-  this.instname[0] = "ADC";
-  this.instname[1] = "AND";
-  this.instname[2] = "ASL";
-  this.instname[3] = "BCC";
-  this.instname[4] = "BCS";
-  this.instname[5] = "BEQ";
-  this.instname[6] = "BIT";
-  this.instname[7] = "BMI";
-  this.instname[8] = "BNE";
-  this.instname[9] = "BPL";
-  this.instname[10] = "BRK";
-  this.instname[11] = "BVC";
-  this.instname[12] = "BVS";
-  this.instname[13] = "CLC";
-  this.instname[14] = "CLD";
-  this.instname[15] = "CLI";
-  this.instname[16] = "CLV";
-  this.instname[17] = "CMP";
-  this.instname[18] = "CPX";
-  this.instname[19] = "CPY";
-  this.instname[20] = "DEC";
-  this.instname[21] = "DEX";
-  this.instname[22] = "DEY";
-  this.instname[23] = "EOR";
-  this.instname[24] = "INC";
-  this.instname[25] = "INX";
-  this.instname[26] = "INY";
-  this.instname[27] = "JMP";
-  this.instname[28] = "JSR";
-  this.instname[29] = "LDA";
-  this.instname[30] = "LDX";
-  this.instname[31] = "LDY";
-  this.instname[32] = "LSR";
-  this.instname[33] = "NOP";
-  this.instname[34] = "ORA";
-  this.instname[35] = "PHA";
-  this.instname[36] = "PHP";
-  this.instname[37] = "PLA";
-  this.instname[38] = "PLP";
-  this.instname[39] = "ROL";
-  this.instname[40] = "ROR";
-  this.instname[41] = "RTI";
-  this.instname[42] = "RTS";
-  this.instname[43] = "SBC";
-  this.instname[44] = "SEC";
-  this.instname[45] = "SED";
-  this.instname[46] = "SEI";
-  this.instname[47] = "STA";
-  this.instname[48] = "STX";
-  this.instname[49] = "STY";
-  this.instname[50] = "TAX";
-  this.instname[51] = "TAY";
-  this.instname[52] = "TSX";
-  this.instname[53] = "TXA";
-  this.instname[54] = "TXS";
-  this.instname[55] = "TYA";
-  this.instname[56] = "ALR";
-  this.instname[57] = "ANC";
-  this.instname[58] = "ARR";
-  this.instname[59] = "AXS";
-  this.instname[60] = "LAX";
-  this.instname[61] = "SAX";
-  this.instname[62] = "DCP";
-  this.instname[63] = "ISC";
-  this.instname[64] = "RLA";
-  this.instname[65] = "RRA";
-  this.instname[66] = "SLO";
-  this.instname[67] = "SRE";
-  this.instname[68] = "SKB";
-  this.instname[69] = "IGN";
-  this.instname[71] = "SHA";
-  this.instname[72] = "SHS";
-  this.instname[73] = "SHY";
-  this.instname[74] = "SHX";
-  this.instname[75] = "LAE";
-  this.instname[76] = "ANE";
-  this.instname[77] = "LXA";
+    // Instruction Names:
+    this.instname[0] = "ADC";
+    this.instname[1] = "AND";
+    this.instname[2] = "ASL";
+    this.instname[3] = "BCC";
+    this.instname[4] = "BCS";
+    this.instname[5] = "BEQ";
+    this.instname[6] = "BIT";
+    this.instname[7] = "BMI";
+    this.instname[8] = "BNE";
+    this.instname[9] = "BPL";
+    this.instname[10] = "BRK";
+    this.instname[11] = "BVC";
+    this.instname[12] = "BVS";
+    this.instname[13] = "CLC";
+    this.instname[14] = "CLD";
+    this.instname[15] = "CLI";
+    this.instname[16] = "CLV";
+    this.instname[17] = "CMP";
+    this.instname[18] = "CPX";
+    this.instname[19] = "CPY";
+    this.instname[20] = "DEC";
+    this.instname[21] = "DEX";
+    this.instname[22] = "DEY";
+    this.instname[23] = "EOR";
+    this.instname[24] = "INC";
+    this.instname[25] = "INX";
+    this.instname[26] = "INY";
+    this.instname[27] = "JMP";
+    this.instname[28] = "JSR";
+    this.instname[29] = "LDA";
+    this.instname[30] = "LDX";
+    this.instname[31] = "LDY";
+    this.instname[32] = "LSR";
+    this.instname[33] = "NOP";
+    this.instname[34] = "ORA";
+    this.instname[35] = "PHA";
+    this.instname[36] = "PHP";
+    this.instname[37] = "PLA";
+    this.instname[38] = "PLP";
+    this.instname[39] = "ROL";
+    this.instname[40] = "ROR";
+    this.instname[41] = "RTI";
+    this.instname[42] = "RTS";
+    this.instname[43] = "SBC";
+    this.instname[44] = "SEC";
+    this.instname[45] = "SED";
+    this.instname[46] = "SEI";
+    this.instname[47] = "STA";
+    this.instname[48] = "STX";
+    this.instname[49] = "STY";
+    this.instname[50] = "TAX";
+    this.instname[51] = "TAY";
+    this.instname[52] = "TSX";
+    this.instname[53] = "TXA";
+    this.instname[54] = "TXS";
+    this.instname[55] = "TYA";
+    this.instname[56] = "ALR";
+    this.instname[57] = "ANC";
+    this.instname[58] = "ARR";
+    this.instname[59] = "AXS";
+    this.instname[60] = "LAX";
+    this.instname[61] = "SAX";
+    this.instname[62] = "DCP";
+    this.instname[63] = "ISC";
+    this.instname[64] = "RLA";
+    this.instname[65] = "RRA";
+    this.instname[66] = "SLO";
+    this.instname[67] = "SRE";
+    this.instname[68] = "SKB";
+    this.instname[69] = "IGN";
+    this.instname[71] = "SHA";
+    this.instname[72] = "SHS";
+    this.instname[73] = "SHY";
+    this.instname[74] = "SHX";
+    this.instname[75] = "LAE";
+    this.instname[76] = "ANE";
+    this.instname[77] = "LXA";
 
-  this.addrDesc = new Array(
-    "Zero Page           ",
-    "Relative            ",
-    "Implied             ",
-    "Absolute            ",
-    "Accumulator         ",
-    "Immediate           ",
-    "Zero Page,X         ",
-    "Zero Page,Y         ",
-    "Absolute,X          ",
-    "Absolute,Y          ",
-    "Preindexed Indirect ",
-    "Postindexed Indirect",
-    "Indirect Absolute   ",
-  );
-};
+    this.addrDesc = new Array(
+      "Zero Page           ",
+      "Relative            ",
+      "Implied             ",
+      "Absolute            ",
+      "Accumulator         ",
+      "Immediate           ",
+      "Zero Page,X         ",
+      "Zero Page,Y         ",
+      "Absolute,X          ",
+      "Absolute,Y          ",
+      "Preindexed Indirect ",
+      "Postindexed Indirect",
+      "Indirect Absolute   ",
+    );
+  }
 
-OpData.prototype = {
-  INS_ADC: 0,
-  INS_AND: 1,
-  INS_ASL: 2,
+  INS_ADC = 0;
+  INS_AND = 1;
+  INS_ASL = 2;
 
-  INS_BCC: 3,
-  INS_BCS: 4,
-  INS_BEQ: 5,
-  INS_BIT: 6,
-  INS_BMI: 7,
-  INS_BNE: 8,
-  INS_BPL: 9,
-  INS_BRK: 10,
-  INS_BVC: 11,
-  INS_BVS: 12,
+  INS_BCC = 3;
+  INS_BCS = 4;
+  INS_BEQ = 5;
+  INS_BIT = 6;
+  INS_BMI = 7;
+  INS_BNE = 8;
+  INS_BPL = 9;
+  INS_BRK = 10;
+  INS_BVC = 11;
+  INS_BVS = 12;
 
-  INS_CLC: 13,
-  INS_CLD: 14,
-  INS_CLI: 15,
-  INS_CLV: 16,
-  INS_CMP: 17,
-  INS_CPX: 18,
-  INS_CPY: 19,
+  INS_CLC = 13;
+  INS_CLD = 14;
+  INS_CLI = 15;
+  INS_CLV = 16;
+  INS_CMP = 17;
+  INS_CPX = 18;
+  INS_CPY = 19;
 
-  INS_DEC: 20,
-  INS_DEX: 21,
-  INS_DEY: 22,
+  INS_DEC = 20;
+  INS_DEX = 21;
+  INS_DEY = 22;
 
-  INS_EOR: 23,
+  INS_EOR = 23;
 
-  INS_INC: 24,
-  INS_INX: 25,
-  INS_INY: 26,
+  INS_INC = 24;
+  INS_INX = 25;
+  INS_INY = 26;
 
-  INS_JMP: 27,
-  INS_JSR: 28,
+  INS_JMP = 27;
+  INS_JSR = 28;
 
-  INS_LDA: 29,
-  INS_LDX: 30,
-  INS_LDY: 31,
-  INS_LSR: 32,
+  INS_LDA = 29;
+  INS_LDX = 30;
+  INS_LDY = 31;
+  INS_LSR = 32;
 
-  INS_NOP: 33,
+  INS_NOP = 33;
 
-  INS_ORA: 34,
+  INS_ORA = 34;
 
-  INS_PHA: 35,
-  INS_PHP: 36,
-  INS_PLA: 37,
-  INS_PLP: 38,
+  INS_PHA = 35;
+  INS_PHP = 36;
+  INS_PLA = 37;
+  INS_PLP = 38;
 
-  INS_ROL: 39,
-  INS_ROR: 40,
-  INS_RTI: 41,
-  INS_RTS: 42,
+  INS_ROL = 39;
+  INS_ROR = 40;
+  INS_RTI = 41;
+  INS_RTS = 42;
 
-  INS_SBC: 43,
-  INS_SEC: 44,
-  INS_SED: 45,
-  INS_SEI: 46,
-  INS_STA: 47,
-  INS_STX: 48,
-  INS_STY: 49,
+  INS_SBC = 43;
+  INS_SEC = 44;
+  INS_SED = 45;
+  INS_SEI = 46;
+  INS_STA = 47;
+  INS_STX = 48;
+  INS_STY = 49;
 
-  INS_TAX: 50,
-  INS_TAY: 51,
-  INS_TSX: 52,
-  INS_TXA: 53,
-  INS_TXS: 54,
-  INS_TYA: 55,
+  INS_TAX = 50;
+  INS_TAY = 51;
+  INS_TSX = 52;
+  INS_TXA = 53;
+  INS_TXS = 54;
+  INS_TYA = 55;
 
-  INS_ALR: 56,
-  INS_ANC: 57,
-  INS_ARR: 58,
-  INS_AXS: 59,
-  INS_LAX: 60,
-  INS_SAX: 61,
-  INS_DCP: 62,
-  INS_ISC: 63,
-  INS_RLA: 64,
-  INS_RRA: 65,
-  INS_SLO: 66,
-  INS_SRE: 67,
-  INS_SKB: 68,
-  INS_IGN: 69,
+  INS_ALR = 56;
+  INS_ANC = 57;
+  INS_ARR = 58;
+  INS_AXS = 59;
+  INS_LAX = 60;
+  INS_SAX = 61;
+  INS_DCP = 62;
+  INS_ISC = 63;
+  INS_RLA = 64;
+  INS_RRA = 65;
+  INS_SLO = 66;
+  INS_SRE = 67;
+  INS_SKB = 68;
+  INS_IGN = 69;
 
-  INS_DUMMY: 70, // dummy instruction used for 'halting' the processor some cycles
+  INS_DUMMY = 70; // dummy instruction used for 'halting' the processor some cycles
 
   // Unofficial "unstable" opcodes — behavior depends on 6502 bus arbitration
   // during indexed addressing. The value stored is ANDed with (H+1) where H
   // is the high byte of the base address before index addition.
   // See https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
-  INS_SHA: 71,
-  INS_SHS: 72,
-  INS_SHY: 73,
-  INS_SHX: 74,
-  INS_LAE: 75,
+  INS_SHA = 71;
+  INS_SHS = 72;
+  INS_SHY = 73;
+  INS_SHX = 74;
+  INS_LAE = 75;
 
   // Unofficial opcodes with "magic" constant — the exact value varies between
   // CPU revisions. Tests are designed to only check behavior where the magic
   // value doesn't affect the outcome (A=$FF or Immediate=$00).
-  INS_ANE: 76,
-  INS_LXA: 77,
+  INS_ANE = 76;
+  INS_LXA = 77;
 
   // -------------------------------- //
 
   // Addressing modes:
-  ADDR_ZP: 0,
-  ADDR_REL: 1,
-  ADDR_IMP: 2,
-  ADDR_ABS: 3,
-  ADDR_ACC: 4,
-  ADDR_IMM: 5,
-  ADDR_ZPX: 6,
-  ADDR_ZPY: 7,
-  ADDR_ABSX: 8,
-  ADDR_ABSY: 9,
-  ADDR_PREIDXIND: 10,
-  ADDR_POSTIDXIND: 11,
-  ADDR_INDABS: 12,
+  ADDR_ZP = 0;
+  ADDR_REL = 1;
+  ADDR_IMP = 2;
+  ADDR_ABS = 3;
+  ADDR_ACC = 4;
+  ADDR_IMM = 5;
+  ADDR_ZPX = 6;
+  ADDR_ZPY = 7;
+  ADDR_ABSX = 8;
+  ADDR_ABSY = 9;
+  ADDR_PREIDXIND = 10;
+  ADDR_POSTIDXIND = 11;
+  ADDR_INDABS = 12;
 
-  setOp: function (inst, op, addr, size, cycles) {
+  setOp(inst, op, addr, size, cycles) {
     this.opdata[op] =
       (inst & 0xff) |
       ((addr & 0xff) << 8) |
       ((size & 0xff) << 16) |
       ((cycles & 0xff) << 24);
-  },
-};
+  }
+}
 
 module.exports = CPU;
